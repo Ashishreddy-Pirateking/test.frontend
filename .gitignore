@@ -40,3 +40,17 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+
+# dependencies
+node_modules/
+
+# environment variables
+.env
+
+# database credentials
+dbpassword.txt
+
+# python cache
+__pycache__/
+*.pyc
