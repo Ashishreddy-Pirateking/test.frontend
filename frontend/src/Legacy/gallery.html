@@ -1,0 +1,459 @@
+ 
+
+
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Stardust Memories</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+    #vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+
+  /* MULTI-LAYER CINEMATIC DARKENING */
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(0,0,0,0) 25%,
+      rgba(0,0,0,0.55) 65%,
+      rgba(0,0,0,0.85) 100%
+    ),
+    linear-gradient(
+      rgba(0,0,0,0.35),
+      rgba(0,0,0,0.35)
+    );
+}
+
+
+
+  body {
+
+
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  canvas { display: block; }
+
+  /* ---------- MODAL ---------- */
+  #modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    z-index: 100;
+  }
+
+  #modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 85vh;
+    background: black;
+    transform: scale(0.9);
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 0 60px rgba(0,0,0,0.9);
+  }
+
+  #modal.active #modal-content {
+    transform: scale(1);
+  }
+
+  #modal-img {
+    max-width: 100%;
+    max-height: 85vh;
+    display: block;
+  }
+
+  #close-btn {
+    position: absolute;
+    top: -48px;
+    right: 0;
+    font-size: 28px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.25s;
+  }
+
+  #close-btn:hover {
+    transform: rotate(90deg) scale(1.1);
+    color: #ff4081;
+  }
+  #cinematic-dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 1;
+}
+#galaxy-mesh {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  /* This puts it ABOVE the background but BELOW content */
+  z-index: 1;
+
+  /* Mesh / veil effect */
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(255,255,255,0.08) 0%,
+      rgba(255,255,255,0.04) 35%,
+      rgba(0,0,0,0.15) 60%,
+      rgba(0,0,0,0.35) 100%
+    );
+
+  /* This is the KEY: it blends with the galaxy, not the UI */
+  mix-blend-mode: overlay;
+}
+
+.back-stage-btn{
+  position: fixed;
+  z-index: 99999999;
+  pointer-events: auto;
+}
+
+</style>
+</head>
+
+<body>
+  <!-- custom cursor & spotlight -->
+<div id="spot" class="spotlight" aria-hidden="true"></div>
+<div id="curs" class="cursor-dot" aria-hidden="true"></div>
+
+<a href="index.html?skipCurtain=1#galleryCta" class="back-stage-btn">Back to Stage</a>
+<p class="gallery-scroll-hint">Scroll down to move through the photos</p>
+
+
+    <div id="cinematic-dim"></div>
+
+
+<!-- MODAL -->
+<div id="modal">
+  <div id="modal-content">
+    <div id="close-btn">✕</div>
+    <img id="modal-img" />
+  </div>
+</div>
+
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------- BASIC SETUP ---------- */
+
+const scene = new THREE.Scene();
+// ---- ATMOSPHERIC DEPTH (MESH FEEL) ----
+scene.fog = new THREE.Fog(
+  0x000000, // fog color (black space)
+  120,      // where fog starts
+  320       // where fog fully fades
+);
+
+
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.set(0, 0, 90);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+renderer.domElement.style.position = 'fixed';
+renderer.domElement.style.top = '0';
+renderer.domElement.style.left = '0';
+renderer.domElement.style.zIndex = '0';
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMappingExposure = 0.85;
+
+
+const overlayScene = new THREE.Scene();
+
+const overlayCamera = new THREE.OrthographicCamera(
+  -1, 1, 1, -1, 0, 1
+);
+
+const overlayMaterial = new THREE.MeshBasicMaterial({
+  color: 0x000000,
+  transparent: true,
+  opacity: 0.35
+});
+
+const overlayGeometry = new THREE.PlaneGeometry(2, 2);
+const overlayMesh = new THREE.Mesh(overlayGeometry, overlayMaterial);
+
+overlayScene.add(overlayMesh);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.04;
+controls.enablePan = false;
+
+/* ---------- BACKGROUND ---------- */
+
+// ---------- VIDEO BACKGROUND ----------
+
+// Create HTML video element
+const bgVideo = document.createElement('video');
+bgVideo.src = 'background.mp4';   // your video file
+bgVideo.loop = true;
+bgVideo.muted = true;             // REQUIRED for autoplay
+bgVideo.playsInline = true;       // IMPORTANT for browsers
+bgVideo.autoplay = true;
+
+// Start playing once it can
+bgVideo.addEventListener('canplay', () => {
+  bgVideo.play();
+});
+
+// Create Three.js video texture
+const videoTexture = new THREE.VideoTexture(bgVideo);
+videoTexture.colorSpace = THREE.SRGBColorSpace;
+videoTexture.minFilter = THREE.LinearFilter;
+videoTexture.magFilter = THREE.LinearFilter;
+
+// Assign as scene background
+scene.background = videoTexture;
+
+renderer.toneMappingExposure = 1.05;
+
+
+
+
+
+
+/* ---------- LIGHTING ---------- */
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+dir.position.set(10, 20, 10);
+scene.add(dir);
+
+/* ---------- CONFETTI (UNCHANGED) ---------- */
+
+const photoGroup = new THREE.Group();
+scene.add(photoGroup);
+
+const geometry = new THREE.PlaneGeometry(6, 8);
+
+function createCardTexture(color) {
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = 1365;
+  const ctx = c.getContext('2d');
+
+  ctx.fillStyle = color;
+  ctx.fillRect(0,0,c.width,c.height);
+
+  ctx.lineWidth = 110;
+  ctx.strokeStyle = '#000';
+  ctx.strokeRect(0,0,c.width,c.height);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+
+const palette = ['#FFEB3B','#FF4081','#00E5FF','#76FF03','#D500F9'];
+const images = [
+  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200',
+  'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200',
+  'https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=1200'
+];
+
+
+for (let i = 0; i < 70; i++) {
+  const mat = new THREE.MeshBasicMaterial({
+    map: createCardTexture(palette[i % palette.length]),
+    side: THREE.DoubleSide
+  });
+
+  const mesh = new THREE.Mesh(geometry, mat);
+
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  const r = 30 + Math.random() * 32;
+
+  mesh.position.set(
+    r * Math.sin(phi) * Math.cos(theta),
+    r * Math.sin(phi) * Math.sin(theta),
+    r * Math.cos(phi)
+  );
+
+  mesh.lookAt(0,0,0);
+
+  mesh.userData = {
+    spin: (Math.random() - 0.5) * 0.001,
+    image: images[i % images.length]
+  };
+
+  photoGroup.add(mesh);
+}
+
+/* ---------- ⭐ STARS (ADDED ONLY) ---------- */
+
+function createStarTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(16,16,0,16,16,16);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(0.3,'rgba(200,220,255,0.8)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,32,32);
+  return new THREE.CanvasTexture(c);
+}
+
+const starCount = 90000;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+
+for(let i=0;i<starPos.length;i++) {
+  starPos[i] = (Math.random() - 0.5) * 400;
+}
+
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+
+const starMat = new THREE.PointsMaterial({
+  size: 0.6,
+  map: createStarTexture(),
+  transparent: true,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  
+  sizeAttenuation: true
+});
+
+const starField = new THREE.Points(starGeo, starMat);
+scene.add(starField);
+
+/* ---------- INTERACTION (UNCHANGED) ---------- */
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let isDragging = false;
+
+window.addEventListener('mousedown', () => isDragging = false);
+window.addEventListener('mousemove', e => {
+  isDragging = true;
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  document.body.style.cursor =
+    raycaster.intersectObjects(photoGroup.children).length
+    ? 'pointer' : 'default';
+});
+
+window.addEventListener('click', e => {
+  if (isDragging) return;
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hit = raycaster.intersectObjects(photoGroup.children)[0];
+  if (hit) openModal(hit.object.userData.image);
+});
+
+/* ---------- MODAL ---------- */
+
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modal-img');
+document.getElementById('close-btn').onclick = closeModal;
+
+function openModal(src) {
+  modalImg.src = src;
+  modal.classList.add('active');
+}
+
+function closeModal() {
+  modal.classList.remove('active');
+}
+
+modal.addEventListener('click', e => {
+  if (e.target === modal) closeModal();
+});
+
+/* ---------- ANIMATE ---------- */
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  starField.rotation.y += 0.0004;   // ⭐ subtle float
+  photoGroup.rotation.y += 0.0012;
+
+  photoGroup.children.forEach(c => {
+    c.rotation.z += c.userData.spin;
+  });
+
+
+
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+<div id="galaxy-mesh"></div>
+<script>
+  const curs = document.getElementById("curs");
+  const spot = document.getElementById("spot");
+
+  window.addEventListener("mousemove", (e) => {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (curs) {
+      curs.style.left = x + "px";
+      curs.style.top = y + "px";
+    }
+    if (spot) {
+      spot.style.left = x + "px";
+      spot.style.top = y + "px";
+    }
+  });
+</script>
+
+</body>
+</html>

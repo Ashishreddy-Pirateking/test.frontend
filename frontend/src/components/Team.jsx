@@ -1,0 +1,110 @@
+import { GOVERNORS } from "../data/legacyData";
+import { useSiteContent } from "../context/SiteContentContext";
+import { resolveMediaUrl } from "../utils/media";
+
+const ZODIAC_SYMBOL_BY_NAME = {
+  aries: "\u2648",
+  taurus: "\u2649",
+  gemini: "\u264A",
+  cancer: "\u264B",
+  leo: "\u264C",
+  virgo: "\u264D",
+  libra: "\u264E",
+  scorpio: "\u264F",
+  sagittarius: "\u2650",
+  capricorn: "\u2651",
+  aquarius: "\u2652",
+  pisces: "\u2653",
+};
+
+const ZODIAC_SYMBOL_SET = new Set(Object.values(ZODIAC_SYMBOL_BY_NAME));
+
+const resolveZodiacSymbol = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (ZODIAC_SYMBOL_SET.has(raw)) return raw;
+  const key = raw.toLowerCase().replace(/[^a-z]/g, "");
+  return ZODIAC_SYMBOL_BY_NAME[key] || raw;
+};
+
+export default function Team() {
+  const { siteContent } = useSiteContent();
+  const governors = siteContent?.governors?.length ? siteContent.governors : GOVERNORS;
+
+  return (
+    <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
+      <h2 className="text-4xl md:text-5xl font-cinzel text-center mb-6 text-[#FFD700]">The Governors</h2>
+      <p className="text-center text-gray-400 mb-16">
+        Meet the 2025-2026 Governors. Hover to reveal their true selves.
+      </p>
+      <div id="teamGrid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {governors.map((g, index) => {
+          const zodiacSymbol = resolveZodiacSymbol(g.zodiacSign);
+          const showZodiac = Boolean(zodiacSymbol);
+          const department = String(g.department || "").trim();
+          const contactInfo = String(g.contactInfo || "").trim();
+
+          return (
+            <div key={`${g.name}-${index}`} className="group relative card-3d h-[400px] cursor-pointer">
+              <div className="relative w-full h-full card-inner preserve-3d">
+                <div className="card-front absolute inset-0 backface-hidden bg-[#111] border border-[#333] overflow-hidden rounded-lg">
+                  <div className="h-3/4 overflow-hidden">
+                    <img
+                      src={resolveMediaUrl(g.img)}
+                      alt={g.name}
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    />
+                  </div>
+                  <div className="h-1/4 p-4 flex flex-col justify-center items-center bg-[#1a1a1a]">
+                    <h3 className="text-xl font-cinzel font-bold text-[#FFD700]">{g.name}</h3>
+                    <p className="text-xs uppercase tracking-widest text-gray-400">{g.role}</p>
+                  </div>
+                </div>
+
+                <div className="card-back absolute inset-0 backface-hidden rotate-y-180 bg-[#4a0404] rounded-lg p-6 flex flex-col justify-center items-center text-center border-2 border-[#FFD700]">
+                  <div className="text-5xl mb-2 text-[#FFD700]">{showZodiac ? zodiacSymbol : "\uD83C\uDFAD"}</div>
+                  <p className="text-[#FFD700] italic mb-5">"{g.quote || "No quote added"}"</p>
+                  <div className="w-full bg-black/30 p-4 rounded text-sm text-gray-200 space-y-3">
+                    <p>
+                      <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Fun Fact:</span>
+                      {g.funFact || "-"}
+                    </p>
+                    <p>
+                      <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Department:</span>
+                      {department || "-"}
+                    </p>
+                    <p>
+                      <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Contact:</span>
+                      {contactInfo || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <a
+        href="/cast"
+        role="button"
+        className="group relative mt-16 block w-full max-w-4xl mx-auto rounded-full border border-[#FFD700]/60 bg-gradient-to-r from-[#1a0b00] via-black to-[#332000] py-6 md:py-7 text-center shadow-[0_0_45px_rgba(255,215,0,0.25)] transition-all duration-300 hover:shadow-[0_0_70px_rgba(255,215,0,0.45)] hover:-translate-y-1 hover:border-[#FFD700] overflow-hidden"
+      >
+        <div className="pointer-events-none absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-300">
+          <div className="absolute -inset-x-40 -bottom-32 h-52 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.65),transparent_60%)] blur-3xl" />
+        </div>
+        <div className="relative flex items-center justify-center gap-3 md:gap-4">
+          <span className="font-cinzel text-sm md:text-base tracking-[0.35em] text-[#fef3c7] uppercase">
+            Meet the
+          </span>
+          <span className="font-cinzel text-3xl md:text-4xl tracking-[0.25em] uppercase text-[#FFD700]">
+            Cast
+          </span>
+          <span className="inline-flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border border-[#FFD700]/70 bg-black/60 text-[#FFD700] text-xl md:text-2xl shadow-[0_0_18px_rgba(255,215,0,0.55)] group-hover:translate-x-1 group-hover:scale-110 transition-transform duration-300">
+            →
+          </span>
+        </div>
+      </a>
+    </section>
+  );
+}

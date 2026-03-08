@@ -1,0 +1,159 @@
+.ticket-card {
+  width: 100%;
+  max-width: 650px !important;
+  margin: 0 auto !important;
+  transform: rotate(0deg);
+  transform-origin: top center;
+  transition: transform 500ms ease;
+  will-change: transform;
+  position: relative;
+}
+
+.ticket-card:hover {
+  transform: rotate(-1deg);
+}
+
+.ticket-stub,
+.ticket-body {
+  position: relative;
+  transition: transform 900ms ease, box-shadow 900ms ease, filter 900ms ease;
+}
+
+.ticket-body-wrap {
+  position: relative;
+}
+
+.ticket-card.is-booked {
+  overflow: visible !important;
+}
+
+.ticket-card.is-booked .ticket-stub {
+  transform: translateX(-28px) rotate(-4deg);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.ticket-card.is-booked .ticket-body {
+  transform: translateX(28px) rotate(4deg);
+  opacity: 1;
+  pointer-events: none;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.ticket-card.is-booked .ticket-stub::after,
+.ticket-card.is-booked .ticket-body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.22) 0 6px,
+    rgba(0, 0, 0, 0) 6px 12px
+  );
+  opacity: 0.6;
+}
+
+.ticket-card.is-booked .ticket-stub::after {
+  right: -7px;
+}
+
+.ticket-card.is-booked .ticket-body::before {
+  left: -7px;
+}
+
+.ticket-booked-banner {
+  position: absolute;
+  inset: auto 6% 8%;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(10, 5, 2, 0.8);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 700ms ease, transform 700ms ease;
+  pointer-events: none;
+}
+
+.ticket-booked-title {
+  font-family: "Cinzel", serif;
+  font-size: 16px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffd700;
+}
+
+.ticket-booked-sub {
+  font-family: "Playfair Display", serif;
+  font-size: 12px;
+  color: rgba(226, 196, 164, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.ticket-card.is-booked .ticket-booked-banner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+@media (max-width: 768px) {
+  .ticket-card {
+    max-width: 95% !important;
+    flex-direction: column !important;
+  }
+  .ticket-card .p-8 {
+    padding: 20px !important;
+  }
+}
+
+.ticket-card .p-6 {
+  padding: 12px !important;
+}
+
+.ticket-card h3 {
+  font-size: 18px !important;
+  margin-bottom: 8px !important;
+}
+
+.ticket-card label {
+  font-size: 11px !important;
+}
+
+.ticket-card input,
+.ticket-card textarea {
+  font-size: 13px !important;
+  padding: 8px 10px !important;
+}
+
+.ticket-card textarea {
+  min-height: 60px !important;
+}
+
+.ticket-card form {
+  gap: 8px !important;
+}
+
+.ticket-card .captcha-container {
+  padding: 8px !important;
+  margin-top: 8px !important;
+}
+
+.ticket-card .captcha-container p {
+  font-size: 12px !important;
+}
+
+.ticket-card .captcha-item {
+  font-size: 1.3rem !important;
+  padding: 2px 4px !important;
+}
+
+.ticket-card #confirmBtn {
+  padding: 8px 10px !important;
+  font-size: 13px !important;
+}

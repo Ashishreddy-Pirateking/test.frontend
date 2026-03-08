@@ -1,0 +1,39 @@
+import { CAST_BATCHES, GOVERNORS, NAVARASAS, TIMELINE } from "./legacyData";
+
+const cloneNavarasas = () =>
+  NAVARASAS.map((item) => ({
+    id: item.id,
+    name: item.name,
+    subtitle: item.subtitle,
+    glowColor: item.glowColor,
+    textColor: item.textColor,
+    plays: [...(item.plays || [])],
+    icon: item.icon,
+  }));
+
+const cloneTimeline = () => TIMELINE.map((item) => ({ ...item }));
+const cloneCastBatches = () =>
+  CAST_BATCHES.map((item) => ({
+    ...item,
+    members: [...(item.members || [])],
+    photos: [...(item.photos || [])],
+  }));
+const cloneGovernors = () => GOVERNORS.map((item) => ({ ...item }));
+
+export const createDefaultSiteContent = () => ({
+  gallery: {
+    images: ["logo", "me", "bikash", "volli", "monish"],
+  },
+  timeline: cloneTimeline(),
+  navarasas: cloneNavarasas(),
+  castBatches: cloneCastBatches(),
+  governors: cloneGovernors(),
+  latestEvent: {
+    title: "Prasthanam 2026",
+    poster: "logo",
+    date: "March 20, 2026",
+    time: "7:00 PM",
+    venue: "Kalidas Auditorium, IIT Kharagpur",
+    description: "Book your seats early and witness Prasthanam's latest stage production live.",
+  },
+});
