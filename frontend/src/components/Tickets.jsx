@@ -223,17 +223,16 @@ export default function Tickets() {
           </div>
         </div>
 
-        <h2 className="text-3xl md:text-4xl font-cinzel text-center mb-10 text-[#FFD700]">Ticket Counter</h2>
+        <h2 className="text-3xl md:text-4xl text-center mb-10 text-[#FFD700] tracking-wider" style={{ fontFamily: "'Anton SC', sans-serif" }}>Ticket Counter </h2>
 
         <div
-          className={`ticket-card bg-[#e2c4a4] text-[#2c1810] rounded-lg overflow-hidden relative shadow-2xl flex flex-col md:flex-row w-full max-w-3xl mx-auto ${
-            ticketBooked ? "is-booked" : ""
-          }`}
+          className={`ticket-card bg-[#e2c4a4] text-[#2c1810] rounded-lg overflow-hidden relative shadow-2xl flex flex-col md:flex-row w-full max-w-3xl mx-auto ${ticketBooked ? "is-booked" : ""
+            }`}
         >
           <div className="absolute left-0 top-0 bottom-0 w-4 ticket-edge"></div>
           <div className="ticket-stub bg-[#2c1810] text-[#e2c4a4] p-6 w-full md:w-1/3 flex flex-col justify-between border-r-2 border-dashed border-[#e2c4a4] relative">
             <div className="text-center">
-              <h3 className="font-cinzel font-bold text-2xl mb-2">ADMIT ONE</h3>
+              <h3 className="font-cinzel font-bold text-2xl mb-2">REGISTER FOR</h3>
               <p className="text-xs uppercase tracking-widest opacity-70">Prasthanam TDS</p>
             </div>
             <div className="text-center my-8">
@@ -245,92 +244,92 @@ export default function Tickets() {
 
           <div className="ticket-body-wrap w-full md:w-2/3 md:ml-4">
             <div className="ticket-body p-6">
-            <h3 className="font-playfair font-bold text-2xl mb-6 border-b-2 border-[#2c1810] pb-2">
-              Book Your Seat (Contact Us)
-            </h3>
-            <form id="ticketForm" className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase mb-1">Name and Roll Number</label>
-                <input
-                  id="nameInput"
-                  type="text"
-                  placeholder="Enter your name"
-                  className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  disabled={ticketBooked}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase mb-1">Gmail</label>
-                <input
-                  id="emailInput"
-                  type="email"
-                  placeholder="email@iitkgp.ac.in"
-                  className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled={ticketBooked}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase mb-1">Review / Message</label>
-                <textarea
-                  id="msgInput"
-                  rows="2"
-                  placeholder="Tell us something dramatic..."
-                  className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  disabled={ticketBooked}
-                ></textarea>
-              </div>
-              <div className="captcha-container">
-                <p
-                  className="text-sm font-bold uppercase mb-2 tracking-wide"
-                  id="captchaInstruction"
-                  style={{ color: captchaColor || undefined }}
-                >
-                  {captchaMode === "prompt" ? (
-                    <>
-                      {captchaMessage}{" "}
-                      <span style={{ color: "#FFD700", textDecoration: "underline" }}>
-                        {captchaTarget.name}
-                      </span>{" "}
-                      emoji
-                    </>
-                  ) : (
-                    captchaMessage
-                  )}
-                </p>
-                <div className="captcha-grid" id="captchaGrid">
-                  {captchaOptions.map((opt) => (
-                    <span
-                      key={opt.name}
-                      className="captcha-item"
-                      onClick={() => handleCaptchaClick(opt)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") handleCaptchaClick(opt);
-                      }}
-                    >
-                      {opt.char}
-                    </span>
-                  ))}
+              <h3 className="font-playfair font-bold text-2xl mb-6 border-b-2 border-[#2c1810] pb-2">
+                Book Your Seat (Contact Us)
+              </h3>
+              <form id="ticketForm" className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold uppercase mb-1 font-['Courier_New']">Name and Roll Number</label>
+                  <input
+                    id="nameInput"
+                    type="text"
+                    placeholder="Enter your name"
+                    className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    disabled={ticketBooked}
+                  />
                 </div>
-              </div>
-              <button
-                id="confirmBtn"
-                type="button"
-                className="w-full bg-[#2c1810] text-[#e2c4a4] font-cinzel font-bold py-3 mt-4 hover:bg-[#4a0404] transition-colors"
-                onClick={handleConfirm}
-                disabled={!captchaVerified || ticketBooked}
-              >
-                {ticketBooked ? "BOOKED" : "CONFIRM BOOKING"}
-              </button>
-            </form>
-          </div>
+                <div>
+                  <label className="block text-sm font-bold uppercase mb-1 font-['Courier_New']">Gmail</label>
+                  <input
+                    id="emailInput"
+                    type="email"
+                    placeholder="email@iitkgp.ac.in"
+                    className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    disabled={ticketBooked}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold uppercase mb-1 font-['Courier_New']">Review / Message</label>
+                  <textarea
+                    id="msgInput"
+                    rows="2"
+                    placeholder="Tell us something dramatic..."
+                    className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    disabled={ticketBooked}
+                  ></textarea>
+                </div>
+                <div className="captcha-container">
+                  <p
+                    className="text-sm font-bold uppercase mb-2 tracking-wide"
+                    id="captchaInstruction"
+                    style={{ color: captchaColor || undefined }}
+                  >
+                    {captchaMode === "prompt" ? (
+                      <>
+                        {captchaMessage}{" "}
+                        <span style={{ color: "#FFD700", textDecoration: "underline" }}>
+                          {captchaTarget.name}
+                        </span>{" "}
+                        emoji
+                      </>
+                    ) : (
+                      captchaMessage
+                    )}
+                  </p>
+                  <div className="captcha-grid" id="captchaGrid">
+                    {captchaOptions.map((opt) => (
+                      <span
+                        key={opt.name}
+                        className="captcha-item"
+                        onClick={() => handleCaptchaClick(opt)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") handleCaptchaClick(opt);
+                        }}
+                      >
+                        {opt.char}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  id="confirmBtn"
+                  type="button"
+                  className="w-full bg-[#2c1810] text-[#e2c4a4] font-cinzel font-bold py-3 mt-4 hover:bg-[#4a0404] transition-colors"
+                  onClick={handleConfirm}
+                  disabled={!captchaVerified || ticketBooked}
+                >
+                  {ticketBooked ? "BOOKED" : "CONFIRM BOOKING"}
+                </button>
+              </form>
+            </div>
 
             <div className="ticket-booked-banner" aria-live="polite">
               <span className="ticket-booked-title">Your Ticket Has Been Booked</span>

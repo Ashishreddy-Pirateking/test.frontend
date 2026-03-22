@@ -21,7 +21,7 @@ export default function GalleryCTA() {
 
         <WarpGalleryLink className="gold-cta-button gallery-cta-prop gallery-cta-galaxy-btn">
           <span className="gallery-cta-clapboard" aria-hidden="true" />
-          <span className="gallery-cta-button-main">Gallery Galaxy</span>
+          <span className="gallery-cta-button-main" style={{ fontFamily: "'Chiro', sans-serif" }}>Gallery Galaxy</span>
           <span className="gallery-cta-button-sub">Launch into the archive</span>
           <span className="gallery-cta-comet gallery-cta-comet-a" aria-hidden="true" />
           <span className="gallery-cta-comet gallery-cta-comet-b" aria-hidden="true" />

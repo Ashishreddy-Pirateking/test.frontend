@@ -1,5 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Limelight&display=swap');
 
+@font-face {
+  font-family: 'Chiro';
+  src: url('../assets/Chiro-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Great Lakes NF';
+  src: url('../assets/GreatLakesNF.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Theater Brillion';
+  src: url('../assets/Theater Brillion DEMO.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Blacksword';
+  src: url('../assets/Blacksword.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .no-scroll {
   overflow: hidden !important;
   height: 100vh;
@@ -537,7 +569,7 @@ a, button, [role="button"], .pointer, .reel-item, .view-btn {
   font-family: "Cinzel", serif;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   text-shadow: 0 0 14px rgba(255, 215, 0, 0.25);
 }
 
@@ -674,7 +706,7 @@ a, button, [role="button"], .pointer, .reel-item, .view-btn {
     min-width: 100%;
   }
   .gallery-cta-button-main {
-    font-size: 0.95rem;
+    font-size: 1.15rem;
     letter-spacing: 0.13em;
   }
   .gallery-cta-comet {

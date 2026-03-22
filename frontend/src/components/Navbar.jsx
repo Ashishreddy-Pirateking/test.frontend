@@ -74,7 +74,7 @@ export default function Navbar() {
           </a>
         )}
       </div>
-      <div className="hidden md:flex space-x-8 text-sm font-bold tracking-widest text-gray-300">
+      <div className="hidden md:flex space-x-8 text-xs font-['Syncopate'] font-bold tracking-widest text-gray-300">
         <a href="#about" className="hover:text-[#FFD700] transition-colors">
           THE SCRIPT
         </a>
@@ -91,7 +91,7 @@ export default function Navbar() {
           CAST
         </a>
         <a href="#contact" className="hover:text-[#FFD700] transition-colors">
-          TICKETS
+          CONTACT US
         </a>
       </div>
     </nav>
