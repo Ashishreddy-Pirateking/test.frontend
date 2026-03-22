@@ -35,31 +35,31 @@ export default function Hero() {
         <img src={stageImg} className="w-full h-full object-cover hero-zoom" alt="Stage" />
       </div>
 
-      <div className="z-10">
-        <h2 className="text-white text-[20px] md:text-[24px] font-['Birthstone'] -mb-4 md:-mb-8 relative z-20 capitalize tracking-wider drop-shadow-md">
+      <div className="z-10 w-full max-w-5xl mx-auto px-2">
+        <h2 className="text-white text-[20px] md:text-[24px] font-['Birthstone'] -mb-2 md:-mb-8 relative z-20 capitalize tracking-wider drop-shadow-md">
           Technology Dramatics Society
         </h2>
-        <div className="group relative mb-8 h-[120px] md:h-[160px] flex items-center justify-center">
-          <h1 className="text-[100px] md:text-[140px] leading-none font-['Bangers'] text-[#FFD700] glow-text transition-opacity duration-300 group-hover:opacity-0 drop-shadow-[0_0_15px_rgba(255,215,0,0.4)] tracking-wide">
+        <div className="group relative mb-8 flex flex-col items-center justify-center min-h-[140px] md:h-[160px]">
+          <h1 className="text-[64px] md:text-[140px] leading-none font-['Bangers'] text-[#FFD700] glow-text transition-opacity duration-300 md:group-hover:opacity-0 drop-shadow-[0_0_15px_rgba(255,215,0,0.4)] tracking-wide">
             Prasthanam
           </h1>
-          <h1 className="text-[100px] md:text-[150px] leading-none font-['Dhurjati'] text-[#FFD700] absolute opacity-0 transition-opacity duration-300 group-hover:opacity-100 tracking-wider drop-shadow-[0_0_20px_rgba(255,215,0,0.7)] whitespace-nowrap">
+          <h1 className="text-[55px] md:text-[150px] leading-[0.8] md:leading-none font-['Dhurjati'] text-[#FFD700] md:absolute opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 tracking-wider drop-shadow-[0_0_20px_rgba(255,215,0,0.7)] whitespace-nowrap -mt-3 md:mt-0">
             ప్రస్థానం
           </h1>
         </div>
-        <div className="mb-10 min-h-[96px] md:min-h-[110px] flex items-center justify-center">
+        <div className="mb-10 min-h-[100px] md:min-h-[110px] flex items-center justify-center">
           <p
-            className={`text-2xl md:text-4xl text-gray-200 font-['NTR'] leading-relaxed transition-all duration-500 ${
+            className={`text-xl md:text-4xl text-gray-200 font-['NTR'] leading-relaxed transition-all duration-500 ${
               isSliding ? "opacity-0 -translate-x-10" : "opacity-100 translate-x-0"
             }`}
           >
             "{dialogues[dialogueIndex]}" <br />
-            <span className="text-sm not-italic font-sans text-gray-500 mt-2 block">(Drama is our Breath)</span>
+            <span className="text-xs md:text-sm not-italic font-sans text-gray-500 mt-2 block">(Drama is our Breath)</span>
           </p>
         </div>
         <a
           href="#about"
-          className="inline-block px-8 py-4 border border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-black transition-all duration-300 font-bold font-['Asimovian'] tracking-widest uppercase"
+          className="inline-block w-full md:w-auto px-8 py-4 border border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-black transition-all duration-300 font-bold font-['Asimovian'] tracking-widest uppercase"
         >
           Enter The Stage
         </a>

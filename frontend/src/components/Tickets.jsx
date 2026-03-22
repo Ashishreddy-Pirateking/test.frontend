@@ -13,6 +13,7 @@ export default function Tickets() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [ticketBooked, setTicketBooked] = useState(false);
+  const ticketRef = useRef(null);
   const [captchaTarget, setCaptchaTarget] = useState(CAPTCHA_EMOJIS[0]);
   const [captchaOptions, setCaptchaOptions] = useState([]);
   const [captchaMessage, setCaptchaMessage] = useState("Loading Check...");
@@ -31,6 +32,47 @@ export default function Tickets() {
   const dataArrayRef = useRef(null);
   const streamRef = useRef(null);
   const animationIdRef = useRef(null);
+
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleOrientation = (event) => {
+      let gamma = event.gamma; 
+      let beta = event.beta;
+      
+      if (gamma === null || beta === null || !ticketRef.current) return;
+      
+      gamma = Math.max(-35, Math.min(35, gamma));
+      beta = Math.max(-35, Math.min(35, beta));
+      
+      const rotateX = beta * -0.6;
+      const rotateY = gamma * 0.6;
+      
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (ticketRef.current) {
+            ticketRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            ticketRef.current.style.transition = 'transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    if (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+      window.addEventListener("deviceorientation", handleOrientation);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener("deviceorientation", handleOrientation);
+      }
+      if (ticketRef.current) {
+        ticketRef.current.style.transform = '';
+      }
+    };
+  }, []);
 
   const initCaptcha = () => {
     const target = CAPTCHA_EMOJIS[Math.floor(Math.random() * CAPTCHA_EMOJIS.length)];
@@ -225,8 +267,13 @@ export default function Tickets() {
 
         <h2 className="text-3xl md:text-4xl text-center mb-10 text-[#FFD700] tracking-wider" style={{ fontFamily: "'Anton SC', sans-serif" }}>Ticket Counter </h2>
 
+        <p className="md:hidden text-center text-[#e2c4a4] text-xs font-mono uppercase tracking-widest mb-4 opacity-60">
+          Tilt phone to move ticket
+        </p>
+
         <div
-          className={`ticket-card bg-[#e2c4a4] text-[#2c1810] rounded-lg overflow-hidden relative shadow-2xl flex flex-col md:flex-row w-full max-w-3xl mx-auto ${ticketBooked ? "is-booked" : ""
+          ref={ticketRef}
+          className={`ticket-card bg-[#e2c4a4] text-[#2c1810] rounded-lg overflow-hidden relative shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col md:flex-row w-full max-w-3xl mx-auto transform-gpu ${ticketBooked ? "is-booked" : ""
             }`}
         >
           <div className="absolute left-0 top-0 bottom-0 w-4 ticket-edge"></div>
@@ -338,7 +385,7 @@ export default function Tickets() {
           </div>
         </div>
 
-        <div className="flex justify-center space-x-8 mt-16">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 mt-16 border-t border-[#222] pt-8">
           <a
             href="https://www.facebook.com/Prasthanam.TDS"
             target="_blank"

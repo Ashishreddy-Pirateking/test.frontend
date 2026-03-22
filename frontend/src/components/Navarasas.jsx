@@ -74,11 +74,11 @@ export default function Navarasas() {
     >
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         <div className="text-center mb-12 flex flex-col items-center">
-          <div className="group relative h-[60px] md:h-[80px] flex items-center justify-center cursor-none">
-            <h2 className="text-4xl md:text-5xl font-['DynaPuff'] font-normal text-[#FFD700] tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] transition-opacity duration-300 group-hover:opacity-0">
+          <div className="group relative min-h-[60px] md:h-[80px] flex flex-col items-center justify-center cursor-none">
+            <h2 className="text-[32px] md:text-5xl font-['DynaPuff'] font-normal text-[#FFD700] tracking-[0.25em] md:tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] transition-opacity duration-300 md:group-hover:opacity-0">
               Navarasa
             </h2>
-            <h2 className="text-5xl md:text-7xl font-['Dhurjati'] font-normal text-[#FFD700] tracking-widest absolute opacity-0 transition-opacity duration-300 group-hover:opacity-100 drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] whitespace-nowrap">
+            <h2 className="text-[40px] md:text-7xl font-['Dhurjati'] font-normal text-[#FFD700] md:absolute md:tracking-widest opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] whitespace-nowrap -mt-2 md:mt-0">
               నవరసాలు
             </h2>
           </div>
@@ -90,7 +90,7 @@ export default function Navarasas() {
             <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
           </div>
         </div>
-        <div id="filterButtons" className="flex flex-wrap justify-center gap-4 mb-16 px-4">
+        <div id="filterButtons" className="flex flex-row md:flex-wrap overflow-x-auto md:overflow-x-visible items-center md:justify-center gap-3 md:gap-4 mb-10 md:mb-16 px-4 pb-4 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: 'x mandatory' }}>
           {rasaList.map((rasa) => {
             const isActive = rasa.id === currentRasa.id;
             const className = [

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { GOVERNORS } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
@@ -30,12 +31,20 @@ const resolveZodiacSymbol = (value) => {
 export default function Team() {
   const { siteContent } = useSiteContent();
   const governors = siteContent?.governors?.length ? siteContent.governors : GOVERNORS;
+  const [flippedCards, setFlippedCards] = useState({});
+
+  const toggleFlip = (index) => {
+    setFlippedCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   return (
     <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
       <h2 className="text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide" style={{ fontFamily: "'Great Lakes NF', sans-serif" }}>The Governors</h2>
       <p className="text-center text-gray-400 mb-16">
-        Meet the 2025-2026 Governors. Hover to reveal their true selves.
+        Meet the 2025-2026 Governors. <span className="hidden md:inline">Hover</span><span className="md:hidden">Tap</span> to reveal their true selves.
       </p>
       <div id="teamGrid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {governors.map((g, index) => {
@@ -45,12 +54,16 @@ export default function Team() {
           const contactInfo = String(g.contactInfo || "").trim();
           
           const quoteText = g.quote || "No quote added";
-          let quoteSizeClass = "text-2xl";
-          if (quoteText.length > 30) quoteSizeClass = "text-[1.15rem]";
-          else if (quoteText.length > 22) quoteSizeClass = "text-xl";
+          let quoteSizeClass = "text-xl md:text-2xl";
+          if (quoteText.length > 30) quoteSizeClass = "text-base md:text-[1.15rem]";
+          else if (quoteText.length > 22) quoteSizeClass = "text-lg md:text-xl";
 
           return (
-            <div key={`${g.name}-${index}`} className="group relative card-3d h-[400px] cursor-pointer">
+            <div 
+              key={`${g.name}-${index}`} 
+              className={`group relative card-3d h-[400px] cursor-pointer ${flippedCards[index] ? 'is-flipped' : ''}`}
+              onClick={() => toggleFlip(index)}
+            >
               <div className="relative w-full h-full card-inner preserve-3d">
                 <div className="card-front absolute inset-0 backface-hidden bg-[#111] border border-[#333] overflow-hidden rounded-lg">
                   <div className="h-3/4 overflow-hidden">

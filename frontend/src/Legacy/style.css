@@ -51,6 +51,8 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100vw;
 }
 
 *{ box-sizing: border-box; cursor: none; }
@@ -61,6 +63,8 @@ body{
     margin:0;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
+    overflow-x: hidden;
+    width: 100%;
 }
 .logo{
     width: 200px;
@@ -186,7 +190,7 @@ input, textarea, button { cursor: auto !important; }
     position: absolute; inset:0;
 }
 .card-back { transform: rotateY(180deg); }
-.card-3d:hover .card-inner { transform: rotateY(180deg); }
+.card-3d:hover .card-inner, .card-3d.is-flipped .card-inner { transform: rotateY(180deg); }
 
 /* small helpers for classes we used in HTML */
 .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
@@ -349,7 +353,7 @@ input, textarea, button { cursor: auto !important; }
 .scratch { position:absolute; width:2px; height:100px; background:rgba(255,184,77,0.3); top:10%; left:20%; animation:scratchMove .4s infinite steps(1); pointer-events:none; mix-blend-mode:overlay; }
 @keyframes scratchMove { 0%{transform:translate(0,0);opacity:0;}10%{transform:translate(100px,50px);opacity:1;}20%{transform:translate(-50px,100px);opacity:0;}30%{transform:translate(200px,20px);opacity:0.5;}100%{opacity:0;} }
 
-@media (max-width:768px) { .modal-content{padding:20px;} .modal-year{font-size:2.5rem;} :root { --frame-width:220px; } }
+@media (max-width:768px) { .modal-content{padding:20px;} .modal-year{font-size:2.5rem;} :root { --frame-width:200px; --frame-height:140px; } }
 @media (max-width:1023px) {
   .timeline-scroll-section.is-pinned-mode .timeline-sticky-shell {
     position: relative;
@@ -360,20 +364,16 @@ input, textarea, button { cursor: auto !important; }
 /* -------------------------------
    GLOBAL CUSTOM CURSOR ENFORCER
    ------------------------------- */
-
-/* Remove ALL default cursors everywhere */
-*, *::before, *::after {
-    cursor: none !important;
-}
-
-/* Inputs/textareas also use custom cursor */
-input, textarea, button, select {
-    cursor: none !important;
-}
-
-/* Even interactive elements must not override cursor */
-a, button, [role="button"], .pointer, .reel-item, .view-btn {
-    cursor: none !important;
+@media (hover: hover) and (pointer: fine) {
+  *, *::before, *::after {
+      cursor: none !important;
+  }
+  input, textarea, button, select {
+      cursor: none !important;
+  }
+  a, button, [role="button"], .pointer, .reel-item, .view-btn {
+      cursor: none !important;
+  }
 }
 
 /* Captcha Styling */
