@@ -1,16 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export default function CursorSpotlight() {
   const cursRef = useRef(null);
   const spotRef = useRef(null);
-  const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-      setIsTouch(true);
-      return;
-    }
-
     const handleMove = (event) => {
       const x = event.clientX;
       const y = event.clientY;
@@ -50,8 +44,6 @@ export default function CursorSpotlight() {
       window.removeEventListener("focus", handleFocus);
     };
   }, []);
-
-  if (isTouch) return null;
 
   return (
     <>

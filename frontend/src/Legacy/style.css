@@ -51,11 +51,9 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;
-  width: 100vw;
 }
 
-*{ box-sizing: border-box; cursor: none; }
+*{ box-sizing: border-box; }
 body{
     background:#050505;
     color:#f3f4f6;
@@ -63,8 +61,6 @@ body{
     margin:0;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
-    overflow-x: hidden;
-    width: 100%;
 }
 .logo{
     width: 200px;
