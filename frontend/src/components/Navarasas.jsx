@@ -90,11 +90,15 @@ export default function Navarasas() {
             <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
           </div>
         </div>
-        <div id="filterButtons" className="flex flex-row md:flex-wrap overflow-x-auto md:overflow-x-visible items-center md:justify-center gap-3 md:gap-4 mb-10 md:mb-16 px-4 pb-4 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: 'x mandatory' }}>
+        <div
+          id="filterButtons"
+          className="mb-10 flex flex-nowrap flex-row items-center gap-3 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mb-16 md:flex-wrap md:justify-center md:overflow-x-visible md:pb-0"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
           {rasaList.map((rasa) => {
             const isActive = rasa.id === currentRasa.id;
             const className = [
-              "px-6 py-2 rounded-full text-sm font-['Cinzel'] tracking-[0.15em] border transition-all duration-300 border backdrop-blur-sm",
+              "shrink-0 snap-center px-6 py-2.5 rounded-full text-sm font-['Cinzel'] tracking-[0.15em] border transition-all duration-300 border backdrop-blur-sm min-h-[44px]",
               isActive
                 ? "text-white border-transparent scale-105 font-bold"
                 : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30",
