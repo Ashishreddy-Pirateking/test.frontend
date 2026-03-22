@@ -17,23 +17,18 @@ export default function Curtains({ isOpen, onOpen }) {
   };
 
   return (
-    <div
-      id="curtainWrapper"
-      className="fixed inset-0 z-50 flex overflow-hidden"
-      aria-hidden={isOpen}
-    >
-      {/* Slightly wider than 50% each so panels overlap at the seam — feels “closer” / more closed */}
+    <div id="curtainWrapper" className="fixed inset-0 z-50 flex">
       <div
         id="leftCurtain"
-        className={`curtain curtain-left relative flex h-full w-[54%] max-w-[54%] shrink-0 items-center justify-end border-r-4 border-[#2a0505] pr-1 sm:pr-4 ${
-          isOpen ? "open" : ""
+        className={`curtain curtain-left w-1/2 h-full relative flex items-center justify-end border-r-4 border-[#2a0505]${
+          isOpen ? " open" : ""
         }`}
       >
-        <div className="pointer-events-none relative z-20 w-full max-w-[min(48vw,20rem)] translate-y-[-8%] pr-1 sm:pr-2">
-          <h2 className="text-right uppercase">
+        <div className="pr-2 md:pr-4 pointer-events-none z-20 opacity-100 translate-y-[-10%]">
+          <h2 className="text-5xl md:text-7xl font-bold text-[#FFD700] tracking-widest text-right leading-tight uppercase">
             THE <br /> STAGE
           </h2>
-          <p className="mt-3 border-t border-[#e2c4a4]/35 pt-3 text-right font-cinzel text-[clamp(9px,2.4vw,12px)] font-bold uppercase tracking-[0.22em] text-[#e2c4a4] opacity-90">
+          <p className="text-[#e2c4a4] font-cinzel font-bold tracking-[0.2em] text-[10px] md:text-xs mt-4 text-right opacity-80 border-t border-[#e2c4a4]/30 pt-2">
             CLICK TO
           </p>
         </div>
@@ -50,15 +45,15 @@ export default function Curtains({ isOpen, onOpen }) {
 
       <div
         id="rightCurtain"
-        className={`curtain curtain-right relative flex h-full w-[54%] max-w-[54%] shrink-0 items-center justify-start border-l-4 border-[#2a0505] pl-1 sm:pl-4 ${
-          isOpen ? "open" : ""
+        className={`curtain curtain-right w-1/2 h-full relative flex items-center justify-start border-l-4 border-[#2a0505]${
+          isOpen ? " open" : ""
         }`}
       >
-        <div className="pointer-events-none relative z-20 w-full max-w-[min(48vw,20rem)] translate-y-[-8%] pl-1 sm:pl-2">
-          <h2 className="text-left uppercase">
+        <div className="pl-2 md:pl-4 pointer-events-none z-20 opacity-100 translate-y-[-10%]">
+          <h2 className="text-5xl md:text-7xl font-bold text-[#FFD700] tracking-widest text-left leading-tight uppercase">
             IS <br /> YOURS
           </h2>
-          <p className="mt-3 border-t border-[#e2c4a4]/35 pt-3 text-left font-cinzel text-[clamp(9px,2.4vw,12px)] font-bold uppercase tracking-[0.22em] text-[#e2c4a4] opacity-90">
+          <p className="text-[#e2c4a4] font-cinzel font-bold tracking-[0.2em] text-[10px] md:text-xs mt-4 text-left opacity-80 border-t border-[#e2c4a4]/30 pt-2">
             ENTER
           </p>
         </div>
