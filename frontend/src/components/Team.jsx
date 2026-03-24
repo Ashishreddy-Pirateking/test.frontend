@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { GOVERNORS } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
@@ -30,12 +31,20 @@ const resolveZodiacSymbol = (value) => {
 export default function Team() {
   const { siteContent } = useSiteContent();
   const governors = siteContent?.governors?.length ? siteContent.governors : GOVERNORS;
+  const [flippedCards, setFlippedCards] = useState({});
+
+  const toggleFlip = (index) => {
+    setFlippedCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   return (
     <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
-      <h2 className="text-4xl md:text-5xl font-cinzel text-center mb-6 text-[#FFD700]">The Governors</h2>
+      <h2 className="text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide" style={{ fontFamily: "'Great Lakes NF', sans-serif" }}>The Governors</h2>
       <p className="text-center text-gray-400 mb-16">
-        Meet the 2025-2026 Governors. Hover to reveal their true selves.
+        Meet the 2025-2026 Governors. <span className="hidden md:inline">Hover</span><span className="md:hidden">Tap</span> to reveal their true selves.
       </p>
       <div id="teamGrid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {governors.map((g, index) => {
@@ -43,9 +52,18 @@ export default function Team() {
           const showZodiac = Boolean(zodiacSymbol);
           const department = String(g.department || "").trim();
           const contactInfo = String(g.contactInfo || "").trim();
+          
+          const quoteText = g.quote || "No quote added";
+          let quoteSizeClass = "text-xl md:text-2xl";
+          if (quoteText.length > 30) quoteSizeClass = "text-base md:text-[1.15rem]";
+          else if (quoteText.length > 22) quoteSizeClass = "text-lg md:text-xl";
 
           return (
-            <div key={`${g.name}-${index}`} className="group relative card-3d h-[400px] cursor-pointer">
+            <div 
+              key={`${g.name}-${index}`} 
+              className={`group relative card-3d h-[400px] cursor-pointer ${flippedCards[index] ? 'is-flipped' : ''}`}
+              onClick={() => toggleFlip(index)}
+            >
               <div className="relative w-full h-full card-inner preserve-3d">
                 <div className="card-front absolute inset-0 backface-hidden bg-[#111] border border-[#333] overflow-hidden rounded-lg">
                   <div className="h-3/4 overflow-hidden">
@@ -56,15 +74,15 @@ export default function Team() {
                     />
                   </div>
                   <div className="h-1/4 p-4 flex flex-col justify-center items-center bg-[#1a1a1a]">
-                    <h3 className="text-xl font-cinzel font-bold text-[#FFD700]">{g.name}</h3>
+                    <h3 className="text-2xl font-bold text-[#FFD700] tracking-wide" style={{ fontFamily: "'Theater Brillion', sans-serif" }}>{g.name}</h3>
                     <p className="text-xs uppercase tracking-widest text-gray-400">{g.role}</p>
                   </div>
                 </div>
 
-                <div className="card-back absolute inset-0 backface-hidden rotate-y-180 bg-[#4a0404] rounded-lg p-6 flex flex-col justify-center items-center text-center border-2 border-[#FFD700]">
+                <div className="card-back absolute inset-0 backface-hidden rotate-y-180 bg-[#4a0404] rounded-lg p-2 md:p-4 flex flex-col justify-center items-center text-center border-2 border-[#FFD700]">
                   <div className="text-5xl mb-2 text-[#FFD700]">{showZodiac ? zodiacSymbol : "\uD83C\uDFAD"}</div>
-                  <p className="text-[#FFD700] italic mb-5">"{g.quote || "No quote added"}"</p>
-                  <div className="w-full bg-black/30 p-4 rounded text-sm text-gray-200 space-y-3">
+                  <p className={`text-[#FFD700] mb-5 w-full whitespace-nowrap overflow-hidden text-ellipsis px-1 ${quoteSizeClass}`} style={{ fontFamily: "'Blacksword', cursive" }}>"{quoteText}"</p>
+                  <div className="w-full bg-black/30 p-2 md:p-4 rounded text-sm text-gray-200 space-y-3">
                     <p>
                       <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Fun Fact:</span>
                       {g.funFact || "-"}

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import logo from "../Legacy/logo.png";
 import WarpGalleryLink from "./WarpGalleryLink";
 
@@ -39,6 +39,9 @@ export default function Navbar() {
   const showBackstage = hasValidAdminSession();
   const logoClickCountRef = useRef(0);
   const logoTimerRef = useRef(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const closeMenu = () => setIsMobileMenuOpen(false);
 
   const handleLogoClick = (event) => {
     event.preventDefault();
@@ -63,7 +66,7 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-md border-b border-[#333] py-4 px-6 flex justify-between items-center">
       <div className="flex items-center gap-1">
         <a href="#" className="scroll-to-top" onClick={handleLogoClick}>
-          <img className="logo" src={logo} alt="Prasthanam logo" />
+          <img className="logo w-40 md:w-[200px] h-auto object-contain" src={logo} alt="Prasthanam logo" />
         </a>
         {showBackstage && (
           <a
@@ -74,7 +77,22 @@ export default function Navbar() {
           </a>
         )}
       </div>
-      <div className="hidden md:flex space-x-8 text-sm font-bold tracking-widest text-gray-300">
+
+      <button
+        className="md:hidden text-gray-300 hover:text-[#FFD700] p-2 focus:outline-none z-50"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label="Toggle Menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {isMobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      <div className="hidden md:flex space-x-8 text-xs font-['Syncopate'] font-bold tracking-widest text-gray-300">
         <a href="#about" className="hover:text-[#FFD700] transition-colors">
           THE SCRIPT
         </a>
@@ -91,9 +109,25 @@ export default function Navbar() {
           CAST
         </a>
         <a href="#contact" className="hover:text-[#FFD700] transition-colors">
-          TICKETS
+          CONTACT US
         </a>
       </div>
+
+      {isMobileMenuOpen && (
+        <div className="absolute top-full left-0 w-full h-[calc(100vh-80px)] bg-black/95 backdrop-blur-xl border-t border-[#333] flex flex-col items-center pt-10 space-y-8 text-sm font-['Syncopate'] font-bold tracking-widest text-gray-300 md:hidden overflow-y-auto pb-32">
+          <a href="#about" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">THE SCRIPT</a>
+          <a href="#latest-event" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">POSTER</a>
+          <div onClick={closeMenu}><WarpGalleryLink className="hover:text-[#FFD700] transition-colors">GALLERY</WarpGalleryLink></div>
+          <a href="#navarasas" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">NAVARASAS</a>
+          <a href="#team" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">CAST</a>
+          <a href="#contact" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">CONTACT US</a>
+          {showBackstage && (
+            <a href="/admin" className="px-6 py-3 mt-4 rounded-full border border-[#FFD700]/45 text-[#FFD700] text-xs font-bold tracking-[0.2em] uppercase hover:bg-[#FFD700] hover:text-black transition-all">
+              Backstage
+            </a>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

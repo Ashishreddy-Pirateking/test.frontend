@@ -14,6 +14,18 @@ const TELUGU_RASA_NAMES = {
   shanta: "శాంతం",
 };
 
+const TELUGU_RASA_FONTS = {
+  shringara: "'Sirivennela', cursive",
+  hasya: "'Timmana', sans-serif",
+  karuna: "'Mandali', sans-serif",
+  raudra: "'Suranna', serif",
+  veera: "'Sree Krushnadevaraya', serif",
+  bhayanaka: "'Dhurjati', sans-serif",
+  bibhatsa: "'Gurajada', serif",
+  adbhuta: "'Tenali Ramakrishna', sans-serif",
+  shanta: "'NTR', sans-serif",
+};
+
 export default function Navarasas() {
   const { siteContent } = useSiteContent();
 
@@ -61,10 +73,15 @@ export default function Navarasas() {
       style={glowStyle}
     >
       <div className="max-w-6xl mx-auto px-6 relative z-10">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-cinzel font-normal text-[#FFD700] tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)]">
-            Navarasa
-          </h2>
+        <div className="text-center mb-12 flex flex-col items-center">
+          <div className="group relative min-h-[60px] md:h-[80px] flex flex-col items-center justify-center cursor-none">
+            <h2 className="text-[32px] md:text-5xl font-['DynaPuff'] font-normal text-[#FFD700] tracking-[0.25em] md:tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] transition-opacity duration-300 md:group-hover:opacity-0">
+              Navarasa
+            </h2>
+            <h2 className="text-[40px] md:text-7xl font-['Dhurjati'] font-normal text-[#FFD700] md:absolute md:tracking-widest opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] whitespace-nowrap -mt-2 md:mt-0">
+              నవరసాలు
+            </h2>
+          </div>
           <div className="mt-3 flex items-center justify-center gap-4">
             <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
             <p className="text-sm md:text-base font-playfair text-gray-300 tracking-[0.28em] uppercase opacity-80">
@@ -73,11 +90,11 @@ export default function Navarasas() {
             <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
           </div>
         </div>
-        <div id="filterButtons" className="flex flex-wrap justify-center gap-4 mb-16 px-4">
+        <div id="filterButtons" className="flex flex-row md:flex-wrap overflow-x-auto md:overflow-x-visible items-center md:justify-center gap-3 md:gap-4 mb-10 md:mb-16 px-4 pb-4 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: 'x mandatory' }}>
           {rasaList.map((rasa) => {
             const isActive = rasa.id === currentRasa.id;
             const className = [
-              "px-6 py-2 rounded-full text-sm font-cinzel tracking-wider transition-all duration-300 border backdrop-blur-sm",
+              "px-6 py-2 rounded-full text-sm font-['Cinzel'] tracking-[0.15em] border transition-all duration-300 border backdrop-blur-sm",
               isActive
                 ? "text-white border-transparent scale-105 font-bold"
                 : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30",
@@ -108,7 +125,10 @@ export default function Navarasas() {
               />
             </div>
             <div className={`border-t-2 border-${currentRasa.textColor.split("-")[1]}-500 w-24 my-6 opacity-50`} />
-            <h3 className="text-5xl md:text-6xl font-sans text-white drop-shadow-lg tracking-wide">
+            <h3 
+              className="text-5xl md:text-7xl text-white drop-shadow-lg tracking-wide transition-all duration-500"
+              style={{ fontFamily: TELUGU_RASA_FONTS[currentRasa.id] || "'Sirivennela', sans-serif" }}
+            >
               {TELUGU_RASA_NAMES[currentRasa.id] || currentRasa.name}
             </h3>
             <p className="text-xl font-sans italic text-gray-300 tracking-widest uppercase opacity-80">

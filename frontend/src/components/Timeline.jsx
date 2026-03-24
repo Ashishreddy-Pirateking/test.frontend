@@ -246,9 +246,14 @@ export default function Timeline() {
       }`}
     >
       <div className="timeline-sticky-shell">
-        <h2 className="text-4xl md:text-5xl font-cinzel text-center mb-4 text-[#FFD700]">
-          The Script (About us)
-        </h2>
+        <div className="text-center group relative min-h-[50px] md:h-[60px] flex flex-col items-center justify-center cursor-none mb-12">
+          <h2 className="text-3xl md:text-5xl text-center text-[#FFD700] transition-opacity duration-300 md:group-hover:opacity-0" style={{ fontFamily: "'IM Fell English SC', serif" }}>
+            The Script (About us)
+          </h2>
+          <h2 className="text-[32px] md:text-7xl text-[#FFD700] md:tracking-widest md:absolute opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 whitespace-nowrap drop-shadow-[0_0_15px_rgba(255,215,0,0.5)] -mt-1 md:mt-0" style={{ fontFamily: "'Lakki Reddy', serif" }}>
+            మా బాగోతలు
+          </h2>
+        </div>
         <div className="timeline-stage">
           <button className="nav-btn prev" id="prevBtn" aria-label="Previous" onClick={() => handleScrollBy(-1)}>
             &#10094;
@@ -273,7 +278,7 @@ export default function Timeline() {
                   onClick={() => setActiveIndex(index)}
                 >
                   <div className="frame-inner">
-                    <div className="frame-content">
+                    <div className="frame-content tracking-wide" style={{ fontFamily: "'Truculenta', sans-serif" }}>
                       <div className="year">{item.year}</div>
                       <div className="title">{item.title}</div>
                     </div>
@@ -300,7 +305,7 @@ export default function Timeline() {
       >
         <div className="projector-beam"></div>
         <div className="scratch"></div>
-        <div className="modal-content" role="document">
+        <div className="modal-content tracking-wide" role="document" style={{ fontFamily: "'Truculenta', sans-serif" }}>
           <button className="close-btn" id="modalClose" aria-label="Close" onClick={() => setActiveIndex(null)}>
             &times;
           </button>

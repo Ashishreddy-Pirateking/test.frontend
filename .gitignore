@@ -19,12 +19,7 @@ backend/.env
 ai-service/.env
 *.local
 
-# Python
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-env/
+
 
 # Data / models / artifacts
 ai-service/saved_model/
@@ -51,6 +46,3 @@ node_modules/
 # database credentials
 dbpassword.txt
 
-# python cache
-__pycache__/
-*.pyc
