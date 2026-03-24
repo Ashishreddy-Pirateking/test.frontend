@@ -356,7 +356,46 @@ export default function AdminGalleryManager() {
       </div>
 
       <style>{`
-        .admin-panel-root, .admin-panel-root * { cursor: auto !important; }
+        .admin-panel-root, .admin-panel-root * {
+          cursor: auto !important;
+          font-family: "Gamja Flower", cursive !important;
+        }
+        .admin-panel-root h1,
+        .admin-panel-root h2,
+        .admin-panel-root h3,
+        .admin-panel-root h4,
+        .admin-panel-root h5,
+        .admin-panel-root h6 {
+          font-family: "Rock 3D", system-ui !important;
+          letter-spacing: 0.08em;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-[10px] {
+          font-size: 12px !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-[11px] {
+          font-size: 13px !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-xs {
+          font-size: calc(0.75rem + 2px) !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-sm {
+          font-size: calc(0.875rem + 2px) !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-base {
+          font-size: calc(1rem + 2px) !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-lg {
+          font-size: calc(1.125rem + 2px) !important;
+        }
+        .admin-panel-root input,
+        .admin-panel-root textarea,
+        .admin-panel-root select,
+        .admin-panel-root button,
+        .admin-panel-root a,
+        .admin-panel-root p,
+        .admin-panel-root label {
+          font-size: calc(1rem + 2px);
+        }
         .admin-panel-root input, .admin-panel-root textarea { caret-color: #FFD700; }
       `}</style>
     </div>

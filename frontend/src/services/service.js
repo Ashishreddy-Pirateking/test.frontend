@@ -28,7 +28,7 @@ const apiRequest = async (path, options = {}) => {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
-  } catch (error) {
+  } catch {
     throw createApiError(
       `Cannot reach backend at ${API_BASE}. Ensure backend server is running.`,
       0
@@ -46,6 +46,13 @@ export const loginAdmin = (username, password) =>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
+  });
+
+export const submitTicketBooking = (payload) =>
+  apiRequest("/api/tickets/book", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
 
 export const fetchPublicSiteContent = () => apiRequest("/api/content/public");
