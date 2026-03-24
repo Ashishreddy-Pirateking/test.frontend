@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CAPTCHA_EMOJIS } from "../data/legacyData";
+import { submitTicketBooking } from "../services/service";
 
 const getRandomEmojis = (target) => {
   const distractors = CAPTCHA_EMOJIS.filter((e) => e.name !== target.name)
@@ -13,7 +14,9 @@ export default function Tickets() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [ticketBooked, setTicketBooked] = useState(false);
-  const ticketRef = useRef(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitMessage, setSubmitMessage] = useState("");
   const [captchaTarget, setCaptchaTarget] = useState(CAPTCHA_EMOJIS[0]);
   const [captchaOptions, setCaptchaOptions] = useState([]);
   const [captchaMessage, setCaptchaMessage] = useState("Loading Check...");
@@ -111,16 +114,35 @@ export default function Tickets() {
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async (event) => {
+    event?.preventDefault();
+    setSubmitError("");
+    setSubmitMessage("");
+
     if (!captchaVerified) {
-      alert("Please complete the security check!");
+      setSubmitError("Please complete the security check.");
       return;
     }
     if (!name.trim() || !email.trim()) {
-      alert("Please enter your name and email.");
+      setSubmitError("Please enter your name and email.");
       return;
     }
-    setTicketBooked(true);
+
+    setSubmitting(true);
+    try {
+      const response = await submitTicketBooking({
+        name,
+        email,
+        message,
+        pageUrl: window.location.href,
+      });
+      setTicketBooked(true);
+      setSubmitMessage(response?.message || "Your booking request has been received.");
+    } catch (error) {
+      setSubmitError(error?.message || "Could not submit your booking right now. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const setResult = (text, type = "neutral") => {
@@ -291,92 +313,101 @@ export default function Tickets() {
 
           <div className="ticket-body-wrap w-full md:w-2/3 md:ml-4">
             <div className="ticket-body p-6">
-              <h3 className="font-playfair font-bold text-2xl mb-6 border-b-2 border-[#2c1810] pb-2">
-                Book Your Seat (Contact Us)
-              </h3>
-              <form id="ticketForm" className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold uppercase mb-1 font-['Courier_New']">Name and Roll Number</label>
-                  <input
-                    id="nameInput"
-                    type="text"
-                    placeholder="Enter your name"
-                    className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    disabled={ticketBooked}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold uppercase mb-1 font-['Courier_New']">Gmail</label>
-                  <input
-                    id="emailInput"
-                    type="email"
-                    placeholder="email@iitkgp.ac.in"
-                    className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    disabled={ticketBooked}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold uppercase mb-1 font-['Courier_New']">Review / Message</label>
-                  <textarea
-                    id="msgInput"
-                    rows="2"
-                    placeholder="Tell us something dramatic..."
-                    className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    disabled={ticketBooked}
-                  ></textarea>
-                </div>
-                <div className="captcha-container">
-                  <p
-                    className="text-sm font-bold uppercase mb-2 tracking-wide"
-                    id="captchaInstruction"
-                    style={{ color: captchaColor || undefined }}
-                  >
-                    {captchaMode === "prompt" ? (
-                      <>
-                        {captchaMessage}{" "}
-                        <span style={{ color: "#FFD700", textDecoration: "underline" }}>
-                          {captchaTarget.name}
-                        </span>{" "}
-                        emoji
-                      </>
-                    ) : (
-                      captchaMessage
-                    )}
-                  </p>
-                  <div className="captcha-grid" id="captchaGrid">
-                    {captchaOptions.map((opt) => (
-                      <span
-                        key={opt.name}
-                        className="captcha-item"
-                        onClick={() => handleCaptchaClick(opt)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") handleCaptchaClick(opt);
-                        }}
-                      >
-                        {opt.char}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <button
-                  id="confirmBtn"
-                  type="button"
-                  className="w-full bg-[#2c1810] text-[#e2c4a4] font-cinzel font-bold py-3 mt-4 hover:bg-[#4a0404] transition-colors"
-                  onClick={handleConfirm}
-                  disabled={!captchaVerified || ticketBooked}
+            <h3 className="font-playfair font-bold text-2xl mb-6 border-b-2 border-[#2c1810] pb-2">
+              Book Your Seat (Contact Us)
+            </h3>
+            <form id="ticketForm" className="space-y-4" onSubmit={handleConfirm}>
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">Name and Roll Number</label>
+                <input
+                  id="nameInput"
+                  type="text"
+                  placeholder="Enter your name"
+                  className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  disabled={ticketBooked || submitting}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">Gmail</label>
+                <input
+                  id="emailInput"
+                  type="email"
+                  placeholder="email@iitkgp.ac.in"
+                  className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  disabled={ticketBooked || submitting}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">Review / Message</label>
+                <textarea
+                  id="msgInput"
+                  rows="2"
+                  placeholder="Tell us something dramatic..."
+                  className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  disabled={ticketBooked || submitting}
+                ></textarea>
+              </div>
+              <div className="captcha-container">
+                <p
+                  className="text-sm font-bold uppercase mb-2 tracking-wide"
+                  id="captchaInstruction"
+                  style={{ color: captchaColor || undefined }}
                 >
-                  {ticketBooked ? "BOOKED" : "CONFIRM BOOKING"}
-                </button>
-              </form>
-            </div>
+                  {captchaMode === "prompt" ? (
+                    <>
+                      {captchaMessage}{" "}
+                      <span style={{ color: "#FFD700", textDecoration: "underline" }}>
+                        {captchaTarget.name}
+                      </span>{" "}
+                      emoji
+                    </>
+                  ) : (
+                    captchaMessage
+                  )}
+                </p>
+                <div className="captcha-grid" id="captchaGrid">
+                  {captchaOptions.map((opt) => (
+                    <span
+                      key={opt.name}
+                      className="captcha-item"
+                      onClick={() => handleCaptchaClick(opt)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") handleCaptchaClick(opt);
+                      }}
+                    >
+                      {opt.char}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              {submitError && (
+                <p className="text-sm font-semibold text-[#7f0000]" aria-live="polite">
+                  {submitError}
+                </p>
+              )}
+              {submitMessage && (
+                <p className="text-sm font-semibold text-[#14532d]" aria-live="polite">
+                  {submitMessage}
+                </p>
+              )}
+              <button
+                id="confirmBtn"
+                type="submit"
+                className="w-full bg-[#2c1810] text-[#e2c4a4] font-cinzel font-bold py-3 mt-4 hover:bg-[#4a0404] transition-colors"
+                disabled={!captchaVerified || ticketBooked || submitting}
+              >
+                {ticketBooked ? "BOOKED" : submitting ? "SENDING..." : "CONFIRM BOOKING"}
+              </button>
+            </form>
+          </div>
 
             <div className="ticket-booked-banner" aria-live="polite">
               <span className="ticket-booked-title">Your Ticket Has Been Booked</span>
