@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NAVARASAS } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
+import Challenge from "./Challenge";
 
 const TELUGU_RASA_NAMES = {
   shringara: "శృంగారం",
@@ -152,6 +153,7 @@ export default function Navarasas() {
           </div>
         </div>
       </div>
+      <Challenge />
     </section>
   );
 }
