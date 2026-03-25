@@ -28,6 +28,9 @@ export default function Tickets() {
   const [micActive, setMicActive] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("Click Start Test 🎤");
   const [voiceType, setVoiceType] = useState("neutral");
+  const ticketRef = useRef(null);
+
+
 
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
