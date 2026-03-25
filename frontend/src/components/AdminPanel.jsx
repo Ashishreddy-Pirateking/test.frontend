@@ -49,6 +49,9 @@ const createNavarasaItem = (idValue) => {
   };
 };
 
+const TICKET_SHEET_URL =
+  "https://docs.google.com/spreadsheets/d/1orVQ0AxpButerxWqD_vwcWtaIBPTQ_EoTWUGM5e85EA/edit?usp=sharing";
+
 export default function AdminPanel() {
   const profile = useMemo(() => {
     try {
@@ -915,10 +918,24 @@ export default function AdminPanel() {
 
         <section id="admin-tickets" className="rounded-2xl border border-[#FFD700]/25 bg-black/35 p-5">
           <h2 className="text-xl font-cinzel text-[#FFD700] tracking-[0.1em] uppercase mb-2">Tickets</h2>
-          <p className="text-gray-300 text-sm">
-            Ticket controls section is reserved here. In the next step, we can connect booking links, pricing, and ticket
-            copy to backend fields.
-          </p>
+          <div className="space-y-3 text-sm text-gray-300">
+            <p>
+              Public ticket form submissions now go through the backend booking API and append into the connected Google
+              Sheet.
+            </p>
+            <a
+              href={TICKET_SHEET_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 rounded-md border border-[#FFD700]/35 text-[#FFD700] uppercase tracking-[0.14em] text-xs hover:bg-[#FFD700] hover:text-black transition-all"
+            >
+              Open Ticket Sheet
+            </a>
+            <p className="text-xs text-gray-400">
+              Backend activation needs `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` in
+              `backend/.env`, and the sheet must be shared with that service account.
+            </p>
+          </div>
         </section>
 
         <p className="text-center text-gray-400/80 text-sm pb-2">
@@ -928,9 +945,46 @@ export default function AdminPanel() {
       <style>{`
         .admin-panel-root, .admin-panel-root * {
           cursor: auto !important;
+          font-family: "Gamja Flower", cursive !important;
         }
         .admin-panel-root {
           scroll-behavior: smooth;
+        }
+        .admin-panel-root h1,
+        .admin-panel-root h2,
+        .admin-panel-root h3,
+        .admin-panel-root h4,
+        .admin-panel-root h5,
+        .admin-panel-root h6 {
+          font-family: "Rock 3D", system-ui !important;
+          letter-spacing: 0.08em;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-[10px] {
+          font-size: 12px !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-[11px] {
+          font-size: 13px !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-xs {
+          font-size: calc(0.75rem + 2px) !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-sm {
+          font-size: calc(0.875rem + 2px) !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-base {
+          font-size: calc(1rem + 2px) !important;
+        }
+        .admin-panel-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6).text-lg {
+          font-size: calc(1.125rem + 2px) !important;
+        }
+        .admin-panel-root input,
+        .admin-panel-root textarea,
+        .admin-panel-root select,
+        .admin-panel-root button,
+        .admin-panel-root a,
+        .admin-panel-root p,
+        .admin-panel-root label {
+          font-size: calc(1rem + 2px);
         }
         .admin-panel-root input, .admin-panel-root textarea {
           caret-color: #FFD700;

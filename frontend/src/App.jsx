@@ -9,7 +9,6 @@ import Navbar from "./components/Navbar";
 import Timeline from "./components/Timeline";
 import Navarasas from "./components/Navarasas";
 import Team from "./components/Team";
-import Challenge from "./components/Challenge";
 import Tickets from "./components/Tickets";
 import Showtime from "./components/Showtime";
 import Footer from "./components/Footer";
@@ -164,7 +163,6 @@ function App() {
           <LatestEventPoster />
           <GalleryCTA />
           <Navarasas />
-          <Challenge />
           <Team />
           <Tickets />
           <Showtime pageContentRef={pageContentRef} />
