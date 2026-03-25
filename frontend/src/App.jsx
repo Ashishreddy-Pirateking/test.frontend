@@ -53,14 +53,18 @@ function App() {
   }, []);
 
   const scrollToHashTarget = () => {
-    const hash = window.location.hash;
-    if (!hash) return;
-    const targetId = hash.replace("#", "");
-    const target = document.getElementById(targetId);
-    if (target) {
-      target.scrollIntoView({ behavior: "auto", block: "start" });
-    }
-  };
+  const hash = window.location.hash;
+  if (!hash) return;
+
+  const targetId = hash.replace("#", "");
+  const target = document.getElementById(targetId);
+
+  if (!target) return;
+
+  setTimeout(() => {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 300);
+};
 
   useEffect(() => {
     if (history.scrollRestoration) {
@@ -74,8 +78,8 @@ function App() {
       Boolean(window.location.hash) &&
       (fromCast === "1" || fromGallery === "1" || skipCurtain === "1");
     if (shouldRestoreHash) {
-      setTimeout(scrollToHashTarget, 0);
-    } else {
+  setTimeout(scrollToHashTarget, 500);
+} else {
       window.scrollTo(0, 0);
     }
   }, []);

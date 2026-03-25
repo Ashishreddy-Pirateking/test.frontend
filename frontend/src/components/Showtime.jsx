@@ -5,8 +5,7 @@ import { gsap } from "gsap";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import stageImg from "../Legacy/stage.jpg";
 import logoImg from "../Legacy/logo.png";
-import cheeringSfx from "../Legacy/Cheering sound effect free copyright.m4a";
-
+import cheeringSfx from "../Legacy/cheering.m4a";
 gsap.registerPlugin(ScrollToPlugin);
 
 export default function Showtime({ pageContentRef }) {
