@@ -1,0 +1,31 @@
+@font-face {
+  font-family: "Chiro";
+  src: url("./assets/Chiro-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Great Lakes NF";
+  src: url("./assets/GreatLakesNF.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Theater Brillion";
+  src: url("./assets/Theater Brillion DEMO.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Blacksword";
+  src: url("./assets/Blacksword.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

@@ -36,14 +36,17 @@ export default function Hero() {
       </div>
 
       <div className="z-10 w-full max-w-5xl mx-auto px-2">
-        <h2 className="text-white text-[20px] md:text-[24px] font-['Birthstone'] -mb-2 md:-mb-8 relative z-20 capitalize tracking-wider drop-shadow-md">
+        <h2 className="text-white text-[20px] md:text-[24px] font-['Birthstone'] -mb-2 md:-mb-4 leading-none relative z-20 capitalize tracking-wider drop-shadow-md">
           Technology Dramatics Society
         </h2>
-        <div className="group relative mb-8 flex flex-col items-center justify-center min-h-[140px] md:h-[160px]">
+        <div className="group relative mb-4 md:mb-6 flex flex-col items-center justify-start min-h-[200px] md:min-h-[220px]">
           <h1 className="text-[64px] md:text-[140px] leading-none font-['Bangers'] text-[#FFD700] glow-text transition-opacity duration-300 md:group-hover:opacity-0 drop-shadow-[0_0_15px_rgba(255,215,0,0.4)] tracking-wide">
             Prasthanam
           </h1>
-          <h1 className="text-[55px] md:text-[150px] leading-[0.8] md:leading-none font-['Dhurjati'] text-[#FFD700] md:absolute opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 tracking-wider drop-shadow-[0_0_20px_rgba(255,215,0,0.7)] whitespace-nowrap -mt-3 md:mt-0">
+          <h1
+            className="mt-2 text-[56px] leading-[0.88] text-[#FFD700] opacity-100 transition-opacity duration-300 drop-shadow-[0_0_20px_rgba(255,215,0,0.7)] whitespace-nowrap md:absolute md:top-3 md:mt-0 md:text-[116px] md:leading-[0.9] md:opacity-0 md:group-hover:opacity-100"
+            style={{ fontFamily: "'Gurajada', serif" }}
+          >
             ప్రస్థానం
           </h1>
         </div>
