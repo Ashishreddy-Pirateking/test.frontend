@@ -63,10 +63,10 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-md border-b border-[#333] py-4 px-6 flex justify-between items-center">
+    <nav className="fixed top-0 w-full z-40 bg-black/80 backdrop-blur-md border-b border-[#333] py-3 px-5 md:px-6 flex justify-between items-center">
       <div className="flex items-center gap-1">
         <a href="#" className="scroll-to-top" onClick={handleLogoClick}>
-          <img className="logo w-40 md:w-[200px] h-auto object-contain" src={logo} alt="Prasthanam logo" />
+          <img className="logo w-36 md:w-[184px] h-auto object-contain" src={logo} alt="Prasthanam logo" />
         </a>
         {showBackstage && (
           <a
@@ -92,7 +92,7 @@ export default function Navbar() {
         </svg>
       </button>
 
-      <div className="hidden md:flex space-x-8 text-xs font-['Syncopate'] font-bold tracking-widest text-gray-300">
+      <div className="hidden md:flex space-x-7 text-xs font-['Syncopate'] font-bold tracking-widest text-gray-300">
         <a href="#about" className="hover:text-[#FFD700] transition-colors">
           THE SCRIPT
         </a>
@@ -114,7 +114,7 @@ export default function Navbar() {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="absolute top-full left-0 w-full h-[calc(100vh-80px)] bg-black/95 backdrop-blur-xl border-t border-[#333] flex flex-col items-center pt-10 space-y-8 text-sm font-['Syncopate'] font-bold tracking-widest text-gray-300 md:hidden overflow-y-auto pb-32">
+        <div className="absolute top-full left-0 w-full h-[calc(100vh-72px)] bg-black/95 backdrop-blur-xl border-t border-[#333] flex flex-col items-center pt-8 space-y-8 text-sm font-['Syncopate'] font-bold tracking-widest text-gray-300 md:hidden overflow-y-auto pb-28">
           <a href="#about" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">THE SCRIPT</a>
           <a href="#latest-event" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">POSTER</a>
           <div onClick={closeMenu}><WarpGalleryLink className="hover:text-[#FFD700] transition-colors">GALLERY</WarpGalleryLink></div>

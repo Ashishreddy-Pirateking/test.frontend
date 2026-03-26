@@ -1168,9 +1168,13 @@ video { transform: scaleX(-1); }
   z-index: 99999999 !important;
   position: fixed;
 }
-/* FIX: prevent heading hiding behind fixed navbar */
-#about {
-  scroll-margin-top: 80px;
+/* FIX: prevent anchor targets from landing under the fixed navbar */
+#about,
+#latest-event,
+#navarasas,
+#team,
+#contact {
+  scroll-margin-top: 78px;
 }
 /* ✅ Fix Navarasa buttons alignment (perfectly centered like before) */
 #filterButtons{
