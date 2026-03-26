@@ -42,8 +42,8 @@ export default function Team() {
 
   return (
     <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
-      <h2 className="text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide" style={{ fontFamily: "'Great Lakes NF', sans-serif" }}>The Governors</h2>
-      <p className="text-center text-gray-400 mb-16">
+      <h2 className="font-lacquer text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide">The Governors</h2>
+      <p className="text-center text-lg text-gray-400 mb-16">
         Meet the 2025-2026 Governors. <span className="hidden md:inline">Hover</span><span className="md:hidden">Tap</span> to reveal their true selves.
       </p>
       <div id="teamGrid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -60,9 +60,9 @@ export default function Team() {
           const contactInfo = String(g.contactInfo || "").trim();
           
           const quoteText = g.quote || "No quote added";
-          let quoteSizeClass = "text-xl md:text-2xl";
-          if (quoteText.length > 30) quoteSizeClass = "text-base md:text-[1.15rem]";
-          else if (quoteText.length > 22) quoteSizeClass = "text-lg md:text-xl";
+          let quoteSizeClass = "text-[22px] md:text-[26px]";
+          if (quoteText.length > 30) quoteSizeClass = "text-[18px] md:text-[20px]";
+          else if (quoteText.length > 22) quoteSizeClass = "text-[20px] md:text-[22px]";
 
           return (
             <div 
@@ -87,24 +87,24 @@ export default function Team() {
                   </div>
                   <div className="h-1/4 p-4 flex flex-col justify-center items-center bg-[#1a1a1a]">
                     <h3 className="text-2xl font-bold text-[#FFD700] tracking-wide" style={{ fontFamily: "'Theater Brillion', sans-serif" }}>{g.name}</h3>
-                    <p className="text-xs uppercase tracking-widest text-gray-400">{g.role}</p>
+                    <p className="text-sm uppercase tracking-widest text-gray-400">{g.role}</p>
                   </div>
                 </div>
 
                 <div className="card-back absolute inset-0 backface-hidden rotate-y-180 bg-[#4a0404] rounded-lg p-2 md:p-4 flex flex-col justify-center items-center text-center border-2 border-[#FFD700]">
                   <div className="text-5xl mb-2 text-[#FFD700]">{showZodiac ? zodiacSymbol : "\uD83C\uDFAD"}</div>
                   <p className={`text-[#FFD700] mb-5 w-full whitespace-nowrap overflow-hidden text-ellipsis px-1 ${quoteSizeClass}`} style={{ fontFamily: "'Blacksword', cursive" }}>"{quoteText}"</p>
-                  <div className="w-full bg-black/30 p-2 md:p-4 rounded text-sm text-gray-200 space-y-3" style={{ fontFamily: "'Jua', sans-serif" }}>
+                  <div className="w-full bg-black/30 p-2 md:p-4 rounded text-base text-gray-200 space-y-3" style={{ fontFamily: "'Jua', sans-serif" }}>
                     <p>
-                      <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Fun Fact:</span>
+                      <span className="text-[#FFD700] font-bold text-sm uppercase mr-1">Fun Fact:</span>
                       {g.funFact || "-"}
                     </p>
                     <p>
-                      <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Department:</span>
+                      <span className="text-[#FFD700] font-bold text-sm uppercase mr-1">Department:</span>
                       {department || "-"}
                     </p>
                     <p>
-                      <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Contact:</span>
+                      <span className="text-[#FFD700] font-bold text-sm uppercase mr-1">Contact:</span>
                       {contactInfo || "-"}
                     </p>
                   </div>
@@ -124,7 +124,7 @@ export default function Team() {
           <div className="absolute -inset-x-40 -bottom-32 h-52 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.65),transparent_60%)] blur-3xl" />
         </div>
         <div className="relative flex items-center justify-center gap-3 md:gap-4">
-          <span className="font-cinzel text-sm md:text-base tracking-[0.35em] text-[#fef3c7] uppercase">
+          <span className="font-cinzel text-base md:text-lg tracking-[0.35em] text-[#fef3c7] uppercase">
             Meet the
           </span>
           <span className="font-cinzel text-3xl md:text-4xl tracking-[0.25em] uppercase text-[#FFD700]">

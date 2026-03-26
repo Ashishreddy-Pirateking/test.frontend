@@ -291,7 +291,7 @@ export default function Showtime({ pageContentRef }) {
     <>
       <div className="showtime-holder">
         <button id="showtimeBtn" ref={showtimeBtnRef} onClick={startShowtime}>
-          SHOWTIME
+          <span className="showtime-label">SHOWTIME</span>
         </button>
       </div>
       {overlays}

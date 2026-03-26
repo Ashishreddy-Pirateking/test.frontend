@@ -64,6 +64,7 @@ export default function Footer() {
             showCredits ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 -translate-y-1"
           }`}
         >
+          <span className="text-gray-600/90">Creators of the page</span>
           {CREDIT_LINKS.map((item) => (
             <a
               key={item.name}
@@ -76,17 +77,16 @@ export default function Footer() {
             </a>
           ))}
         </div>
-        <p className="text-xs text-gray-700 font-mono">
-          (
+        <p className="text-[14px] text-gray-600 opacity-90 font-mono">
           <button
             type="button"
             onClick={handleCreditTap}
-            className="text-inherit hover:text-gray-500 transition-colors"
+            className="inline bg-transparent border-0 p-0 m-0 align-baseline text-inherit hover:text-gray-500 transition-colors"
             aria-label="Show footer credits"
           >
-            c
-          </button>
-          ) 2025 Governing Batch- Prasthanam
+            ©
+          </button>{" "}
+          2025 Governing Batch- Prasthanam
         </p>
       </div>
     </footer>

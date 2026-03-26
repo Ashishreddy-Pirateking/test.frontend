@@ -490,7 +490,7 @@ input, textarea, button { cursor: auto !important; }
 .gallery-cta-kicker {
   margin: 0;
   color: rgba(226, 196, 164, 0.88);
-  font-family: "Cinzel", serif;
+  font-family: "Nabla", "Cinzel", serif;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -1539,6 +1539,19 @@ video { transform: scaleX(-1); }
 
   backdrop-filter: blur(8px);
   overflow: hidden;
+}
+
+#showtimeBtn .showtime-label {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  font-family: "Nabla", "Bangers", cursive;
+  font-size: 1.08em;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  font-variation-settings: "EDPT" 88, "EHLT" 14;
 }
 
 /* Spotlight aura behind button */
