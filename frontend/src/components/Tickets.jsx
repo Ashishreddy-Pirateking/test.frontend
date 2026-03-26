@@ -10,6 +10,7 @@ const getRandomEmojis = (target) => {
 };
 
 export default function Tickets() {
+  const ticketFieldStyle = { fontFamily: "'SourGummy', sans-serif", fontStyle: "italic" };
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -290,7 +291,7 @@ export default function Tickets() {
           </div>
         </div>
 
-        <h2 className="text-3xl md:text-4xl text-center mb-10 text-[#FFD700] tracking-wider" style={{ fontFamily: "'Anton SC', sans-serif" }}>Ticket Counter </h2>
+        <h2 className="text-3xl md:text-4xl text-center mb-10 text-[#FFD700]" style={{ fontFamily: "'Walter Turncoat', cursive" }}>Ticket Counter </h2>
 
         <p className="md:hidden text-center text-[#e2c4a4] text-xs font-mono uppercase tracking-widest mb-4 opacity-60">
           Tilt phone to move ticket
@@ -321,36 +322,39 @@ export default function Tickets() {
             </h3>
             <form id="ticketForm" className="space-y-4" onSubmit={handleConfirm}>
               <div>
-                <label className="block text-xs font-bold uppercase mb-1">Name and Roll Number</label>
+                <label className="block text-xs font-bold uppercase mb-1" style={ticketFieldStyle}>Name and Roll Number</label>
                 <input
                   id="nameInput"
                   type="text"
                   placeholder="Enter your name"
                   className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                  style={ticketFieldStyle}
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   disabled={ticketBooked || submitting}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase mb-1">Gmail</label>
+                <label className="block text-xs font-bold uppercase mb-1" style={ticketFieldStyle}>Gmail</label>
                 <input
                   id="emailInput"
                   type="email"
                   placeholder="email@iitkgp.ac.in"
                   className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                  style={ticketFieldStyle}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   disabled={ticketBooked || submitting}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase mb-1">Review / Message</label>
+                <label className="block text-xs font-bold uppercase mb-1" style={ticketFieldStyle}>Review / Message</label>
                 <textarea
                   id="msgInput"
                   rows="2"
                   placeholder="Tell us something dramatic..."
                   className="w-full bg-transparent border-b border-[#2c1810] focus:outline-none focus:border-[#4a0404] py-1 font-playfair placeholder-[#2c1810]/50"
+                  style={ticketFieldStyle}
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
                   disabled={ticketBooked || submitting}
@@ -443,6 +447,18 @@ export default function Tickets() {
               <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
             </svg>
             <span>@prasthanam_iitkgp</span>
+          </a>
+          <a
+            href="https://whatsapp.com/channel/0029VbBP8Pt4SpkESvDNYF0l"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 text-gray-400 hover:text-[#FFD700] transition-colors"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 11.5a8.5 8.5 0 0 1-12.57 7.48L3 20l1.13-5.08A8.5 8.5 0 1 1 21 11.5Z" />
+              <path d="M8.8 9.4c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .5.4l.5 1.3c.1.3.1.5-.1.7l-.4.5c-.1.1-.2.3-.1.5.3.6.8 1.2 1.4 1.7.6.5 1.3.9 2 1.1.2.1.4 0 .5-.1l.6-.7c.2-.2.4-.2.6-.1l1.2.6c.3.1.4.3.3.6l-.2.8c-.1.3-.2.5-.5.6-.5.2-1.2.3-1.9.1-1.1-.3-2.2-.9-3.2-1.8-1-.8-1.8-1.8-2.3-2.9-.5-1-.6-1.9-.3-2.5Z" />
+            </svg>
+            <span>WhatsApp Channel</span>
           </a>
           <a
             href="mailto:prasthanam.iitkgp@gmail.com"

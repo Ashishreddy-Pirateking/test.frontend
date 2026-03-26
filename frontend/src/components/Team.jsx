@@ -82,7 +82,7 @@ export default function Team() {
                 <div className="card-back absolute inset-0 backface-hidden rotate-y-180 bg-[#4a0404] rounded-lg p-2 md:p-4 flex flex-col justify-center items-center text-center border-2 border-[#FFD700]">
                   <div className="text-5xl mb-2 text-[#FFD700]">{showZodiac ? zodiacSymbol : "\uD83C\uDFAD"}</div>
                   <p className={`text-[#FFD700] mb-5 w-full whitespace-nowrap overflow-hidden text-ellipsis px-1 ${quoteSizeClass}`} style={{ fontFamily: "'Blacksword', cursive" }}>"{quoteText}"</p>
-                  <div className="w-full bg-black/30 p-2 md:p-4 rounded text-sm text-gray-200 space-y-3">
+                  <div className="w-full bg-black/30 p-2 md:p-4 rounded text-sm text-gray-200 space-y-3" style={{ fontFamily: "'Jua', sans-serif" }}>
                     <p>
                       <span className="text-[#FFD700] font-bold text-xs uppercase mr-1">Fun Fact:</span>
                       {g.funFact || "-"}

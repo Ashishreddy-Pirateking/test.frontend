@@ -431,7 +431,7 @@ export default function Challenge() {
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
             <circle cx="12" cy="13" r="4"></circle>
           </svg>
-          <h2 className="text-3xl font-cinzel text-white">
+          <h2 className="text-3xl text-white" style={{ fontFamily: "'Kavoon', cursive" }}>
             The Navarasa Challenge
           </h2>
         </div>
@@ -443,10 +443,11 @@ export default function Challenge() {
         {phase === "idle" && (
           <div id="challengeStart">
             <button
-              className="px-8 py-4 bg-[#FFD700] text-black font-bold uppercase tracking-widest hover:scale-105 transition-transform rounded shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+              className="px-8 py-4 bg-[#FFD700] text-black hover:scale-105 transition-transform rounded shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+              style={{ fontFamily: "'Eagle Lake', cursive" }}
               onClick={openCamera}
             >
-              Check your Navarasa talent
+              Test your talent
             </button>
           </div>
         )}

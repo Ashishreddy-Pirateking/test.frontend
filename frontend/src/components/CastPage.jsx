@@ -47,7 +47,7 @@ export default function CastPage() {
       </div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.16),transparent_60%)]" />
 
-      <nav className="relative z-20 bg-black/80 backdrop-blur-md border-b border-[#333] py-4 px-6 flex justify-between items-center">
+      <nav className="relative z-20 bg-black/80 backdrop-blur-md border-b border-[#333] py-4 px-6 flex justify-start items-center gap-4">
         <a href="/">
           <img className="logo" src={logo} alt="Prasthanam logo" />
         </a>
@@ -64,7 +64,7 @@ export default function CastPage() {
           <p className="text-xs md:text-sm text-[#e2c4a4] font-cinzel tracking-[0.3em] uppercase mb-3">Prasthanam Ensemble</p>
           <h1 className="text-4xl md:text-6xl font-cinzel text-[#FFD700] tracking-[0.2em] uppercase mb-4">The Cast</h1>
           <p className="text-gray-300 max-w-2xl mx-auto">
-            Batch-wise and year-wise member foundation. We can keep expanding this archive with full records in the next update.
+            The Family of Prasthanam through years
           </p>
         </div>
 

@@ -137,7 +137,7 @@ export default function Navarasas() {
             </p>
           </div>
           <div className="bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/10 relative overflow-hidden group shadow-2xl max-h-[320px] overflow-y-auto">
-            <h4 className="text-2xl font-cinzel text-white mb-6 border-b border-white/10 pb-4">
+            <h4 className="text-2xl text-white mb-6 border-b border-white/10 pb-4" style={{ fontFamily: "'Comic Relief', cursive" }}>
               Signature Plays
             </h4>
             <ul id="playsList" className="space-y-2 text-base text-gray-300">
