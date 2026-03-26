@@ -247,7 +247,7 @@ export default function Timeline() {
     >
       <div className="timeline-sticky-shell">
         <div className="text-center group relative min-h-[50px] md:h-[60px] flex flex-col items-center justify-center cursor-none mb-12">
-          <h2 className="font-henny-penny text-3xl md:text-5xl text-center text-[#FFD700] transition-opacity duration-300 md:group-hover:opacity-0">
+          <h2 className="text-3xl md:text-5xl text-center text-[#FFD700] transition-opacity duration-300 md:group-hover:opacity-0" style={{ fontFamily: "'Limelight', cursive" }}>
             Script (About Us)
           </h2>
           <h2 className="text-[32px] md:text-7xl text-[#FFD700] md:tracking-widest md:absolute opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 whitespace-nowrap drop-shadow-[0_0_15px_rgba(255,215,0,0.5)] -mt-1 md:mt-0" style={{ fontFamily: "'AkayaTelivigala', serif" }}>
@@ -279,8 +279,8 @@ export default function Timeline() {
                 >
                   <div className="frame-inner">
                     <div className="frame-content tracking-wide" style={{ fontFamily: "'Truculenta', sans-serif" }}>
-                      <div className="year" style={{ fontSize: "calc(2.2rem + 2px)" }}>{item.year}</div>
-                      <div className="title" style={{ fontFamily: "'Delius', cursive", fontSize: "calc(0.9rem + 2px)" }}>{item.title}</div>
+                      <div className="year">{item.year}</div>
+                      <div className="title" style={{ fontFamily: "'Delius', cursive" }}>{item.title}</div>
                     </div>
                   </div>
                 </div>
@@ -315,10 +315,10 @@ export default function Timeline() {
           <h3 className="modal-title" id="mTitle" style={{ fontFamily: "'Delius', cursive" }}>
             {activeItem?.title ?? ""}
           </h3>
-          <p className="modal-desc" id="mDesc" style={{ fontSize: "calc(1.1rem + 2px)" }}>
+          <p className="modal-desc" id="mDesc">
             {activeItem?.desc ?? ""}
           </p>
-          <div style={{ fontSize: "calc(0.8rem + 2px)", color: "#5a4230", marginTop: 20 }}>
+          <div style={{ fontSize: "0.8rem", color: "#5a4230", marginTop: 20 }}>
             REEL ID: <span id="mId">{activeItem?.id ?? ""}</span> // ARCHIVE DEPT.
           </div>
         </div>

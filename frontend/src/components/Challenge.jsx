@@ -351,9 +351,10 @@ export default function Challenge() {
           faceYValues.push(Number(data.face_box.y || 0));
           faceHeights.push(Number(data.face_box.h || 1));
         }
-        if (data.emotion && data.emotion !== "NO_FACE" && data.emotion !== "ERROR") {
+        const emotionVal = String(data.emotion || "").toUpperCase();
+        if (emotionVal && emotionVal !== "NO_FACE" && emotionVal !== "ERROR") {
           samples.push(data);
-        }
+       }
         if (
           String(data.emotion || "").toUpperCase() === required &&
           Number(data.target_confidence || 0) >= EARLY_STOP_TARGET_CONFIDENCE
@@ -395,8 +396,8 @@ export default function Challenge() {
       }
 
       if (!samples.length) {
-        setScore(0);
-        setComment("Face not detected clearly. Use brighter light and keep face centered for full scan.");
+      setScore(0);
+            setComment(`No valid samples. Last response: ${JSON.stringify(lastResponse)}`);
         setPhase("result");
         setScanActive(false);
         releaseCamera();
