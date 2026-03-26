@@ -48,6 +48,12 @@ export default function Team() {
       </p>
       <div id="teamGrid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {governors.map((g, index) => {
+          const normalizedGovernorName = String(g.name || "").replace(/\s+/g, "").toLowerCase();
+          const fallbackGovernor =
+            GOVERNORS.find(
+              (item) => String(item.name || "").replace(/\s+/g, "").toLowerCase() === normalizedGovernorName
+            ) || GOVERNORS[index];
+          const imageSrc = resolveMediaUrl(g.img || fallbackGovernor?.img || "logo");
           const zodiacSymbol = resolveZodiacSymbol(g.zodiacSign);
           const showZodiac = Boolean(zodiacSymbol);
           const department = String(g.department || "").trim();
@@ -68,9 +74,15 @@ export default function Team() {
                 <div className="card-front absolute inset-0 backface-hidden bg-[#111] border border-[#333] overflow-hidden rounded-lg">
                   <div className="h-3/4 overflow-hidden">
                     <img
-                      src={resolveMediaUrl(g.img)}
+                      src={imageSrc}
                       alt={g.name}
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                      onError={(event) => {
+                        const fallbackSrc = resolveMediaUrl(fallbackGovernor?.img || "logo");
+                        if (event.currentTarget.src !== fallbackSrc) {
+                          event.currentTarget.src = fallbackSrc;
+                        }
+                      }}
                     />
                   </div>
                   <div className="h-1/4 p-4 flex flex-col justify-center items-center bg-[#1a1a1a]">

@@ -11,6 +11,7 @@ const SiteContentContext = createContext({
 });
 
 const AUTO_REFRESH_MS = 15000;
+const SITE_CONTENT_CACHE_KEY = "prasthanam_public_site_content";
 
 const mergeSiteContent = (incoming) => {
   const fallback = createDefaultSiteContent();
@@ -44,8 +45,26 @@ const mergeSiteContent = (incoming) => {
   };
 };
 
+const readCachedSiteContent = () => {
+  try {
+    const raw = localStorage.getItem(SITE_CONTENT_CACHE_KEY);
+    if (!raw) return createDefaultSiteContent();
+    return mergeSiteContent(JSON.parse(raw));
+  } catch {
+    return createDefaultSiteContent();
+  }
+};
+
+const writeCachedSiteContent = (content) => {
+  try {
+    localStorage.setItem(SITE_CONTENT_CACHE_KEY, JSON.stringify(content));
+  } catch {
+    // Ignore storage write failures and keep runtime state.
+  }
+};
+
 export function SiteContentProvider({ children }) {
-  const [siteContent, setSiteContent] = useState(createDefaultSiteContent);
+  const [siteContent, setSiteContent] = useState(readCachedSiteContent);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,10 +73,12 @@ export function SiteContentProvider({ children }) {
     if (!silent) setError("");
     try {
       const data = await fetchPublicSiteContent();
-      setSiteContent(mergeSiteContent(data));
+      const mergedContent = mergeSiteContent(data);
+      setSiteContent(mergedContent);
+      writeCachedSiteContent(mergedContent);
     } catch (err) {
       setError(err?.message || "Failed to load content.");
-      setSiteContent(createDefaultSiteContent());
+      setSiteContent((prev) => prev || readCachedSiteContent());
     } finally {
       if (!silent) setLoading(false);
     }
