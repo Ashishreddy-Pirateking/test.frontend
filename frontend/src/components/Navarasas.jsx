@@ -76,7 +76,7 @@ export default function Navarasas() {
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         <div className="text-center mb-12 flex flex-col items-center">
           <div className="group relative min-h-[60px] md:h-[80px] flex flex-col items-center justify-center cursor-none">
-            <h2 className="font-edu-guides text-[32px] md:text-5xl font-normal text-[#FFD700] tracking-[0.25em] md:tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] transition-opacity duration-300 md:group-hover:opacity-0">
+            <h2 className="text-[32px] md:text-5xl font-['DynaPuff'] font-normal text-[#FFD700] tracking-[0.25em] md:tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] transition-opacity duration-300 md:group-hover:opacity-0">
               Navarasa
             </h2>
             <h2 className="text-[40px] md:text-7xl font-['Dhurjati'] font-normal text-[#FFD700] md:absolute md:tracking-widest opacity-100 md:opacity-0 transition-opacity duration-300 md:group-hover:opacity-100 drop-shadow-[0_0_18px_rgba(255,215,0,0.65)] whitespace-nowrap -mt-2 md:mt-0">

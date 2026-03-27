@@ -42,7 +42,7 @@ export default function Team() {
 
   return (
     <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
-      <h2 className="font-lacquer text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide">The Governors</h2>
+      <h2 className="text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide" style={{ fontFamily: "'Great Lakes NF', sans-serif" }}>The Governors</h2>
       <p className="text-center text-lg text-gray-400 mb-16">
         Meet the 2025-2026 Governors. <span className="hidden md:inline">Hover</span><span className="md:hidden">Tap</span> to reveal their true selves.
       </p>
