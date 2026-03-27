@@ -52,17 +52,20 @@ export default function Challenge() {
 
   const [phase, setPhase] = useState("idle");
   const [targetEmotion, setTargetEmotion] = useState("...");
+  const [cameraReady, setCameraReady] = useState(false);
   const [judging, setJudging] = useState(false);
-  const [judgingText, setJudgingText] = useState("Analyzing...");
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("...");
 
   useEffect(() => () => stopStream(), []);
 
   const stopStream = () => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
     if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraReady(false);
   };
 
   const getNextEmotion = () => {
@@ -71,16 +74,30 @@ export default function Challenge() {
   };
 
   const openCamera = async () => {
+    stopStream();
+    setCameraReady(false);
+    setJudging(false);
+    setPhase("camera");
+
     try {
-      stopStream();
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+      });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play().then(() => {
+            setTimeout(() => setCameraReady(true), 800);
+          }).catch(() => setCameraReady(true));
+        };
+      }
+
       setTargetEmotion(getNextEmotion());
-      setJudging(false);
-      setPhase("camera");
-    } catch {
-      alert("Camera access denied. Please allow camera permissions.");
+    } catch (err) {
+      setPhase("idle");
+      alert("Camera access denied. Please allow camera permissions and try again.");
     }
   };
 
@@ -91,59 +108,67 @@ export default function Challenge() {
   };
 
   const judgeMe = async () => {
-    if (judging) return;
+    if (judging || !cameraReady) return;
+
     const v = videoRef.current;
-    if (!v || v.readyState < 2) { alert("Camera not ready yet."); return; }
+    if (!v || !v.videoWidth || !v.videoHeight) {
+      alert("Camera not showing video yet. Wait 2 seconds and try again.");
+      return;
+    }
 
     const canvas = document.createElement("canvas");
     canvas.width = v.videoWidth;
     canvas.height = v.videoHeight;
-    canvas.getContext("2d").drawImage(v, 0, 0);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(v, 0, 0);
     const imageData = canvas.toDataURL("image/jpeg", 0.85);
 
     const required = toCode(targetEmotion);
     setJudging(true);
-    setJudgingText("Analyzing your expression...");
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+
       const resp = await fetch(AI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: imageData, targetEmotion: required }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
-      if (!resp.ok) {
-        throw new Error(`API error: ${resp.status}`);
-      }
+      if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
 
       const data = await resp.json();
       const emotion = String(data.emotion || "").toUpperCase();
 
+      stopStream();
+      setJudging(false);
+
       if (!emotion || emotion === "NO_FACE" || emotion === "ERROR") {
-        stopStream();
         setScore(0);
-        setComment("Face not detected. Better lighting + face centered.");
+        setComment("Face not detected clearly. Try better lighting and center your face.");
         setPhase("result");
-        setJudging(false);
         return;
       }
 
       const targetConf = Number(data.target_confidence || 0);
       const dominantIsTarget = emotion === required;
-      const matchBonus = dominantIsTarget ? 20 : 0;
-      let finalScore = Math.round(
-        Math.min(100, Math.max(0, targetConf * 100 * 0.8 + matchBonus))
-      );
+      let finalScore = Math.round(targetConf * 100 * 0.75 + (dominantIsTarget ? 25 : 0));
+      finalScore = Math.min(100, Math.max(0, finalScore));
 
-      stopStream();
       setScore(finalScore);
       setComment(getComment(required, finalScore));
       setPhase("result");
-      setJudging(false);
 
     } catch (err) {
       setJudging(false);
-      alert(`Could not reach AI server.\nError: ${err.message}\n\nThe AI server may be waking up (free tier). Try again in 30 seconds.`);
+      if (err.name === "AbortError") {
+        alert("Request timed out. The AI server may be waking up. Wait 30 seconds and try again.");
+      } else {
+        alert(`Error: ${err.message}`);
+      }
     }
   };
 
@@ -173,14 +198,15 @@ export default function Challenge() {
         )}
 
         {phase === "camera" && (
-          <div className="relative bg-[#111] border-2 border-[#FFD700] rounded-lg p-2 max-w-lg mx-auto">
-            <div className="absolute top-4 left-0 w-full text-center z-20 pointer-events-none">
-              <span className="bg-black/70 px-4 py-1 rounded text-[#FFD700] font-bold text-sm animate-pulse">
+          <div className="relative bg-[#111] border-2 border-[#FFD700] rounded-lg p-3 max-w-lg mx-auto">
+
+            <div className="text-center mb-2">
+              <span className="text-[#FFD700] font-bold text-sm animate-pulse">
                 ACT NOW: {targetEmotion}
               </span>
             </div>
 
-            <div className="relative overflow-hidden rounded-lg aspect-video bg-black">
+            <div className="relative overflow-hidden rounded-lg bg-black" style={{ aspectRatio: "4/3" }}>
               <video
                 ref={videoRef}
                 autoPlay
@@ -188,17 +214,28 @@ export default function Challenge() {
                 muted
                 className="w-full h-full object-cover scale-x-[-1]"
               />
+
+              {!cameraReady && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-3 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderWidth: 3 }} />
+                    <p className="text-[#FFD700] text-xs">Starting camera...</p>
+                  </div>
+                </div>
+              )}
+
               {judging && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
                   <div className="text-center">
                     <div className="w-12 h-12 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-[#FFD700] text-sm font-bold">{judgingText}</p>
+                    <p className="text-[#FFD700] text-sm font-bold">AI is judging...</p>
+                    <p className="text-gray-400 text-xs mt-1">This may take 5-10 seconds</p>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="mt-4 flex gap-4 justify-center pb-2">
+            <div className="mt-4 flex gap-4 justify-center pb-1">
               <button
                 onClick={stopChallenge}
                 disabled={judging}
@@ -208,16 +245,18 @@ export default function Challenge() {
               </button>
               <button
                 onClick={judgeMe}
-                disabled={judging}
-                className="px-6 py-2 bg-[#FFD700] text-black font-bold uppercase hover:bg-white transition-colors disabled:opacity-40"
+                disabled={judging || !cameraReady}
+                className="px-6 py-2 bg-[#FFD700] text-black font-bold uppercase hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {judging ? "Judging..." : "Judge Me"}
+                {judging ? "Judging..." : !cameraReady ? "Starting..." : "Judge Me"}
               </button>
             </div>
 
-            <p className="text-xs text-gray-500 text-center pb-2">
-              Make your expression, then click Judge Me
-            </p>
+            {cameraReady && !judging && (
+              <p className="text-xs text-gray-500 text-center pb-1">
+                Make your expression, then click Judge Me
+              </p>
+            )}
           </div>
         )}
 
