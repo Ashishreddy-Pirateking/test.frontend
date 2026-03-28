@@ -48,12 +48,33 @@ const getComment = (code, score) => {
   return bank[0];
 };
 
-// Wake the server silently in the background
 const wakeServer = () => {
   fetch(AI_WAKE_URL, { method: "GET", mode: "cors" }).catch(() => {});
 };
 
-// Fetch with retry — retries once after 5s if first attempt times out
+// Capture frame with brightness/contrast boost for dark environments
+const captureFrame = (videoEl) => {
+  const w = videoEl.videoWidth;
+  const h = videoEl.videoHeight;
+
+  // First canvas: draw the video (un-mirrored — DeepFace doesn't need mirroring)
+  const c1 = document.createElement("canvas");
+  c1.width = w;
+  c1.height = h;
+  const ctx1 = c1.getContext("2d");
+  ctx1.drawImage(videoEl, 0, 0, w, h);
+
+  // Second canvas: apply brightness + contrast boost
+  const c2 = document.createElement("canvas");
+  c2.width = w;
+  c2.height = h;
+  const ctx2 = c2.getContext("2d");
+  ctx2.filter = "brightness(1.5) contrast(1.3)";
+  ctx2.drawImage(c1, 0, 0);
+
+  return c2.toDataURL("image/jpeg", 0.92);
+};
+
 const fetchWithRetry = async (url, options, timeoutMs = 65000) => {
   const attempt = async () => {
     const controller = new AbortController();
@@ -72,7 +93,6 @@ const fetchWithRetry = async (url, options, timeoutMs = 65000) => {
     return await attempt();
   } catch (err) {
     if (err.name === "AbortError") {
-      // Server timed out — wait 5s and retry once more
       await new Promise((r) => setTimeout(r, 5000));
       return await attempt();
     }
@@ -92,8 +112,8 @@ export default function Challenge() {
   const [judgingMsg, setJudgingMsg] = useState("AI is judging...");
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("...");
+  const [debugInfo, setDebugInfo] = useState(null);
 
-  // Wake the server as soon as component mounts
   useEffect(() => {
     wakeServer();
     return () => stopStream();
@@ -117,8 +137,9 @@ export default function Challenge() {
     stopStream();
     setCameraReady(false);
     setJudging(false);
+    setDebugInfo(null);
     setPhase("camera");
-    wakeServer(); // ping again when user starts
+    wakeServer();
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -157,22 +178,14 @@ export default function Challenge() {
       return;
     }
 
-    // Capture frame
-    const canvas = document.createElement("canvas");
-    canvas.width = v.videoWidth;
-    canvas.height = v.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(v, 0, 0);
-    const imageData = canvas.toDataURL("image/jpeg", 0.85);
-
+    const imageData = captureFrame(v);
     const required = toCode(targetEmotion);
     setJudging(true);
     setJudgingMsg("Sending to AI...");
 
-    // Show progressive messages so user knows it's working
-    const msgTimer1 = setTimeout(() => setJudgingMsg("AI is judging your expression..."), 4000);
-    const msgTimer2 = setTimeout(() => setJudgingMsg("Server waking up, almost there..."), 20000);
-    const msgTimer3 = setTimeout(() => setJudgingMsg("Retrying... hang tight!"), 68000);
+    const t1 = setTimeout(() => setJudgingMsg("AI is analyzing your expression..."), 4000);
+    const t2 = setTimeout(() => setJudgingMsg("Server waking up, almost there..."), 20000);
+    const t3 = setTimeout(() => setJudgingMsg("Retrying automatically..."), 68000);
 
     try {
       const resp = await fetchWithRetry(AI_URL, {
@@ -181,21 +194,20 @@ export default function Challenge() {
         body: JSON.stringify({ image: imageData, targetEmotion: required }),
       }, 65000);
 
-      clearTimeout(msgTimer1);
-      clearTimeout(msgTimer2);
-      clearTimeout(msgTimer3);
+      [t1, t2, t3].forEach(clearTimeout);
 
       if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
 
       const data = await resp.json();
       const emotion = String(data.emotion || "").toUpperCase();
 
+      setDebugInfo(data);
       stopStream();
       setJudging(false);
 
       if (!emotion || emotion === "NO_FACE" || emotion === "ERROR") {
         setScore(0);
-        setComment("Face not detected clearly. Try better lighting and center your face.");
+        setComment("__NOFACE__");
         setPhase("result");
         return;
       }
@@ -210,17 +222,11 @@ export default function Challenge() {
       setPhase("result");
 
     } catch (err) {
-      clearTimeout(msgTimer1);
-      clearTimeout(msgTimer2);
-      clearTimeout(msgTimer3);
+      [t1, t2, t3].forEach(clearTimeout);
       setJudging(false);
 
       if (err.name === "AbortError") {
-        alert(
-          "Server is taking too long (even after retry). " +
-          "This happens when Render free tier is cold. " +
-          "Wait 60 seconds and try again."
-        );
+        alert("Server took too long even after retry. Wait 60 seconds and try again.");
       } else {
         alert(`Error: ${err.message}`);
       }
@@ -254,7 +260,6 @@ export default function Challenge() {
 
         {phase === "camera" && (
           <div className="relative bg-[#111] border-2 border-[#FFD700] rounded-lg p-3 max-w-lg mx-auto">
-
             <div className="text-center mb-2">
               <span className="text-[#FFD700] font-bold text-sm animate-pulse">
                 ACT NOW: {targetEmotion}
@@ -268,6 +273,7 @@ export default function Challenge() {
                 playsInline
                 muted
                 className="w-full h-full object-cover scale-x-[-1]"
+                style={{ filter: "brightness(1.4) contrast(1.1)" }}
               />
 
               {!cameraReady && (
@@ -309,7 +315,7 @@ export default function Challenge() {
 
             {cameraReady && !judging && (
               <p className="text-xs text-gray-500 text-center pb-1">
-                Make your expression, then click Judge Me
+                Center your face • Ensure good lighting • Then click Judge Me
               </p>
             )}
           </div>
@@ -317,13 +323,30 @@ export default function Challenge() {
 
         {phase === "result" && (
           <div className="relative bg-[#111] border-2 border-[#FFD700] rounded-lg p-8 max-w-lg mx-auto text-center">
-            <div
-              className="text-6xl font-black mb-4"
-              style={{ color: score >= 70 ? "#22c55e" : "#FFD700" }}
-            >
-              {score}/100
-            </div>
-            <p className="text-xl text-white mb-6 italic">"{comment}"</p>
+            {comment === "__NOFACE__" ? (
+              <>
+                <div className="text-5xl mb-4">😶</div>
+                <p className="text-white text-lg mb-2 font-bold">Face not detected</p>
+                <p className="text-gray-400 text-sm mb-3">
+                  Make sure your face is well-lit and centered. Move closer to the camera.
+                </p>
+                {debugInfo && (
+                  <p className="text-xs text-gray-600 mb-4 break-all font-mono text-left bg-black/40 p-2 rounded">
+                    Debug: {JSON.stringify(debugInfo)}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div
+                  className="text-6xl font-black mb-4"
+                  style={{ color: score >= 70 ? "#22c55e" : "#FFD700" }}
+                >
+                  {score}/100
+                </div>
+                <p className="text-xl text-white mb-6 italic">"{comment}"</p>
+              </>
+            )}
             <button
               onClick={openCamera}
               className="px-6 py-2 border border-[#FFD700] text-[#FFD700] uppercase hover:bg-[#FFD700] hover:text-black transition-colors"
