@@ -75,7 +75,7 @@ const captureFrame = (videoEl) => {
   return c2.toDataURL("image/jpeg", 0.92);
 };
 
-const fetchWithRetry = async (url, options, timeoutMs = 65000) => {
+const fetchWithRetry = async (url, options, timeoutMs = 150000) => {
   const attempt = async () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -184,15 +184,15 @@ export default function Challenge() {
     setJudgingMsg("Sending to AI...");
 
     const t1 = setTimeout(() => setJudgingMsg("AI is analyzing your expression..."), 4000);
-    const t2 = setTimeout(() => setJudgingMsg("Server waking up, almost there..."), 20000);
-    const t3 = setTimeout(() => setJudgingMsg("Retrying automatically..."), 68000);
+    const t2 = setTimeout(() => setJudgingMsg("Processing on CPU, this takes ~30s..."), 15000);
+    const t3 = setTimeout(() => setJudgingMsg("Still working, almost done..."), 45000);
 
     try {
       const resp = await fetchWithRetry(AI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: imageData, targetEmotion: required }),
-      }, 65000);
+      }, 150000);
 
       [t1, t2, t3].forEach(clearTimeout);
 
@@ -290,7 +290,7 @@ export default function Challenge() {
                   <div className="text-center">
                     <div className="w-12 h-12 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                     <p className="text-[#FFD700] text-sm font-bold">{judgingMsg}</p>
-                    <p className="text-gray-400 text-xs mt-1">Server may take up to 60s on first load</p>
+                    <p className="text-gray-400 text-xs mt-1">First analysis takes ~30-60s on free server</p>
                   </div>
                 </div>
               )}
