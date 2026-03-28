@@ -12,7 +12,10 @@ const EMOTIONS_LIST = [
   "ADBHUTA (Wonder)",
 ];
 
-const AI_URL = import.meta.env.VITE_AI_API_URL || "https://navarasa-ai-api.onrender.com/predict";
+const AI_BASE = (import.meta.env.VITE_AI_API_URL || "https://navarasa-ai-api.onrender.com/predict")
+  .replace(/\/predict$/, "");
+const AI_URL = `${AI_BASE}/predict`;
+const AI_WAKE_URL = `${AI_BASE}/`;
 
 const shuffled = (arr) => {
   const c = [...arr];
@@ -45,6 +48,38 @@ const getComment = (code, score) => {
   return bank[0];
 };
 
+// Wake the server silently in the background
+const wakeServer = () => {
+  fetch(AI_WAKE_URL, { method: "GET", mode: "cors" }).catch(() => {});
+};
+
+// Fetch with retry — retries once after 5s if first attempt times out
+const fetchWithRetry = async (url, options, timeoutMs = 65000) => {
+  const attempt = async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return resp;
+    } catch (err) {
+      clearTimeout(timer);
+      throw err;
+    }
+  };
+
+  try {
+    return await attempt();
+  } catch (err) {
+    if (err.name === "AbortError") {
+      // Server timed out — wait 5s and retry once more
+      await new Promise((r) => setTimeout(r, 5000));
+      return await attempt();
+    }
+    throw err;
+  }
+};
+
 export default function Challenge() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -54,10 +89,15 @@ export default function Challenge() {
   const [targetEmotion, setTargetEmotion] = useState("...");
   const [cameraReady, setCameraReady] = useState(false);
   const [judging, setJudging] = useState(false);
+  const [judgingMsg, setJudgingMsg] = useState("AI is judging...");
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("...");
 
-  useEffect(() => () => stopStream(), []);
+  // Wake the server as soon as component mounts
+  useEffect(() => {
+    wakeServer();
+    return () => stopStream();
+  }, []);
 
   const stopStream = () => {
     if (streamRef.current) {
@@ -78,24 +118,25 @@ export default function Challenge() {
     setCameraReady(false);
     setJudging(false);
     setPhase("camera");
+    wakeServer(); // ping again when user starts
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
       });
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play().then(() => {
-            setTimeout(() => setCameraReady(true), 800);
-          }).catch(() => setCameraReady(true));
+          videoRef.current.play()
+            .then(() => setTimeout(() => setCameraReady(true), 800))
+            .catch(() => setCameraReady(true));
         };
       }
 
       setTargetEmotion(getNextEmotion());
-    } catch (err) {
+    } catch {
       setPhase("idle");
       alert("Camera access denied. Please allow camera permissions and try again.");
     }
@@ -112,10 +153,11 @@ export default function Challenge() {
 
     const v = videoRef.current;
     if (!v || !v.videoWidth || !v.videoHeight) {
-      alert("Camera not showing video yet. Wait 2 seconds and try again.");
+      alert("Camera not showing video yet. Wait a moment and try again.");
       return;
     }
 
+    // Capture frame
     const canvas = document.createElement("canvas");
     canvas.width = v.videoWidth;
     canvas.height = v.videoHeight;
@@ -125,18 +167,23 @@ export default function Challenge() {
 
     const required = toCode(targetEmotion);
     setJudging(true);
+    setJudgingMsg("Sending to AI...");
+
+    // Show progressive messages so user knows it's working
+    const msgTimer1 = setTimeout(() => setJudgingMsg("AI is judging your expression..."), 4000);
+    const msgTimer2 = setTimeout(() => setJudgingMsg("Server waking up, almost there..."), 20000);
+    const msgTimer3 = setTimeout(() => setJudgingMsg("Retrying... hang tight!"), 68000);
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
-
-      const resp = await fetch(AI_URL, {
+      const resp = await fetchWithRetry(AI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: imageData, targetEmotion: required }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+      }, 65000);
+
+      clearTimeout(msgTimer1);
+      clearTimeout(msgTimer2);
+      clearTimeout(msgTimer3);
 
       if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
 
@@ -163,9 +210,17 @@ export default function Challenge() {
       setPhase("result");
 
     } catch (err) {
+      clearTimeout(msgTimer1);
+      clearTimeout(msgTimer2);
+      clearTimeout(msgTimer3);
       setJudging(false);
+
       if (err.name === "AbortError") {
-        alert("Request timed out. The AI server may be waking up. Wait 30 seconds and try again.");
+        alert(
+          "Server is taking too long (even after retry). " +
+          "This happens when Render free tier is cold. " +
+          "Wait 60 seconds and try again."
+        );
       } else {
         alert(`Error: ${err.message}`);
       }
@@ -228,8 +283,8 @@ export default function Challenge() {
                 <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
                   <div className="text-center">
                     <div className="w-12 h-12 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                    <p className="text-[#FFD700] text-sm font-bold">AI is judging...</p>
-                    <p className="text-gray-400 text-xs mt-1">This may take 5-10 seconds</p>
+                    <p className="text-[#FFD700] text-sm font-bold">{judgingMsg}</p>
+                    <p className="text-gray-400 text-xs mt-1">Server may take up to 60s on first load</p>
                   </div>
                 </div>
               )}
