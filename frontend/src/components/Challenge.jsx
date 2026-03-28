@@ -181,6 +181,14 @@ export default function Challenge() {
     const imageData = captureFrame(v);
     const required = toCode(targetEmotion);
     setJudging(true);
+    setJudgingMsg("Waking up AI server...");
+
+    try {
+      const wakeCtrl = new AbortController();
+      setTimeout(() => wakeCtrl.abort(), 90000);
+      await fetch(`${AI_BASE}/warmup`, { signal: wakeCtrl.signal });
+    } catch {}
+
     setJudgingMsg("Sending to AI...");
 
     const t1 = setTimeout(() => setJudgingMsg("AI is analyzing your expression..."), 4000);
