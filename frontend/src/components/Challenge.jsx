@@ -21,7 +21,7 @@ const resolveAiBase = (value) =>
 const configuredAiBase = resolveAiBase(import.meta.env.VITE_AI_API_URL);
 const AI_BASE = configuredAiBase.startsWith("/") ? configuredAiBase : "/api/ai";
 const AI_URL = `${AI_BASE}/predict`;
-const AI_WAKE_URL = AI_BASE;
+const AI_WAKE_URL = `${AI_BASE}/warmup`;
 
 const shuffled = (arr) => {
   const c = [...arr];

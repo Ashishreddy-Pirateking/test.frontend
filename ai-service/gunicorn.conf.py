@@ -1,0 +1,9 @@
+bind = "0.0.0.0:" + __import__("os").environ.get("PORT", "5001")
+workers = 1
+threads = 1
+timeout = 180
+graceful_timeout = 30
+worker_class = "sync"
+accesslog = "-"
+errorlog = "-"
+capture_output = True

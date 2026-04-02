@@ -1,16 +1,34 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import tensorflow as tf
-import numpy as np
-from PIL import Image
 import base64
-import io
-import cv2
+import os
 import time
+
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
+
+import cv2
+import numpy as np
+import tensorflow as tf
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 DEBUG_PREDICT_LOG = False
+app.config["MAX_CONTENT_LENGTH"] = 6 * 1024 * 1024
+
+try:
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+except Exception as thread_error:
+    print("TensorFlow thread config skipped:", thread_error)
+
+try:
+    cv2.setNumThreads(1)
+except Exception as cv_error:
+    print("OpenCV thread config skipped:", cv_error)
 
 CLASSES = [
     "ADBHUTA", "BHAYANAKA", "BIBHATSA",
@@ -59,12 +77,24 @@ def decode_base64_image(image_value):
         return None
     payload = raw.split(",", 1)[1] if "," in raw else raw
     image_bytes = base64.b64decode(payload, validate=False)
-    pil_image = Image.open(io.BytesIO(image_bytes)).convert("L")
-    return np.array(pil_image)
+    image_arr = np.frombuffer(image_bytes, dtype=np.uint8)
+    decoded = cv2.imdecode(image_arr, cv2.IMREAD_GRAYSCALE)
+    return decoded
 
 def detect_faces(gray_image):
     img_h, img_w = gray_image.shape[:2]
-    min_side = max(40, min(img_h, img_w) // 8)
+    if max(img_h, img_w) > 480:
+        scale = 480.0 / float(max(img_h, img_w))
+        small = cv2.resize(
+            gray_image,
+            (max(1, int(img_w * scale)), max(1, int(img_h * scale))),
+            interpolation=cv2.INTER_AREA,
+        )
+    else:
+        scale = 1.0
+        small = gray_image
+
+    min_side = max(36, min(small.shape[:2]) // 8)
     passes = [
         {"scaleFactor": 1.2, "minNeighbors": 6},
         {"scaleFactor": 1.15, "minNeighbors": 5},
@@ -72,12 +102,24 @@ def detect_faces(gray_image):
     ]
     for params in passes:
         faces = face_cascade.detectMultiScale(
-            gray_image,
+            small,
             scaleFactor=params["scaleFactor"],
             minNeighbors=params["minNeighbors"],
             minSize=(min_side, min_side),
         )
         if len(faces):
+            if scale != 1.0:
+                scaled_faces = []
+                for (x, y, w, h) in faces:
+                    scaled_faces.append(
+                        (
+                            int(round(x / scale)),
+                            int(round(y / scale)),
+                            int(round(w / scale)),
+                            int(round(h / scale)),
+                        )
+                    )
+                return scaled_faces
             return faces
     return []
 
@@ -116,7 +158,6 @@ def predict_with_tta(face_48, fast_mode=True):
     if fast_mode:
         variants = [
             face_48,
-            cv2.flip(face_48, 1),
         ]
     else:
         variants = [
@@ -222,6 +263,12 @@ def predict():
                 "Fast:", fast_mode,
             )
 
+        total_ms = int((time.time() - start_time) * 1000)
+        print(
+            f"Predict ok emotion={emotion} target={target_emotion or '-'} "
+            f"fast={fast_mode} ms={total_ms}"
+        )
+
         return jsonify({
             "emotion": emotion,
             "confidence": confidence,
@@ -236,7 +283,7 @@ def predict():
             "target_rank": target_rank,
             "top_predictions": top_predictions,
             "probabilities": probabilities,
-            "inference_ms": int((time.time() - start_time) * 1000),
+            "inference_ms": total_ms,
             "face_box": {
                 "x": int(x),
                 "y": int(y),
@@ -248,6 +295,10 @@ def predict():
     except Exception as e:
         print("Prediction error:", e)
         return jsonify({"emotion": "ERROR", "confidence": 0.0})
+
+@app.route("/warmup")
+def warmup():
+    return jsonify({"status": "ok"})
 
 @app.route("/")
 def home():
