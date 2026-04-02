@@ -12,10 +12,16 @@ const EMOTIONS_LIST = [
   "ADBHUTA (Wonder)",
 ];
 
-const AI_BASE = (import.meta.env.VITE_AI_API_URL || "https://navarasa-ai-api.onrender.com/predict")
-  .replace(/\/predict$/, "");
+const resolveAiBase = (value) =>
+  String(value || "/api/ai")
+    .trim()
+    .replace(/\/predict\/?$/, "")
+    .replace(/\/+$/, "");
+
+const configuredAiBase = resolveAiBase(import.meta.env.VITE_AI_API_URL);
+const AI_BASE = configuredAiBase.startsWith("/") ? configuredAiBase : "/api/ai";
 const AI_URL = `${AI_BASE}/predict`;
-const AI_WAKE_URL = `${AI_BASE}/`;
+const AI_WAKE_URL = AI_BASE;
 
 const shuffled = (arr) => {
   const c = [...arr];
@@ -49,13 +55,18 @@ const getComment = (code, score) => {
 };
 
 const wakeServer = () => {
-  fetch(AI_WAKE_URL, { method: "GET", mode: "cors" }).catch(() => {});
+  fetch(AI_WAKE_URL, { method: "GET", cache: "no-store" }).catch(() => {});
 };
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Capture frame with brightness/contrast boost for dark environments
 const captureFrame = (videoEl) => {
-  const w = videoEl.videoWidth;
-  const h = videoEl.videoHeight;
+  const sourceWidth = videoEl.videoWidth;
+  const sourceHeight = videoEl.videoHeight;
+  const scale = Math.min(1, 480 / Math.max(sourceWidth, sourceHeight));
+  const w = Math.max(1, Math.round(sourceWidth * scale));
+  const h = Math.max(1, Math.round(sourceHeight * scale));
 
   // First canvas: draw the video (un-mirrored — DeepFace doesn't need mirroring)
   const c1 = document.createElement("canvas");
@@ -75,7 +86,28 @@ const captureFrame = (videoEl) => {
   return c2.toDataURL("image/jpeg", 0.92);
 };
 
-const fetchWithRetry = async (url, options, timeoutMs = 150000) => {
+const waitForAiReady = async (timeoutMs = 90000) => {
+  const startTime = Date.now();
+  let lastError = null;
+
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const response = await fetch(AI_WAKE_URL, {
+        method: "GET",
+        cache: "no-store",
+      });
+      if (response.ok) return;
+      lastError = new Error(`AI wake check returned ${response.status}`);
+    } catch (error) {
+      lastError = error;
+    }
+    await sleep(3000);
+  }
+
+  throw lastError || new Error("AI server did not wake up in time.");
+};
+
+const fetchWithRetry = async (url, options, timeoutMs = 150000, retries = 2) => {
   const attempt = async () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -89,15 +121,26 @@ const fetchWithRetry = async (url, options, timeoutMs = 150000) => {
     }
   };
 
-  try {
-    return await attempt();
-  } catch (err) {
-    if (err.name === "AbortError") {
-      await new Promise((r) => setTimeout(r, 5000));
-      return await attempt();
+  for (let index = 0; index <= retries; index += 1) {
+    try {
+      const response = await attempt();
+      if ([502, 503, 504].includes(response.status) && index < retries) {
+        await sleep(4000 * (index + 1));
+        continue;
+      }
+      return response;
+    } catch (err) {
+      const retryableNetworkError =
+        err?.name === "AbortError" || err instanceof TypeError || /Failed to fetch/i.test(String(err?.message || ""));
+      if (retryableNetworkError && index < retries) {
+        await sleep(4000 * (index + 1));
+        continue;
+      }
+      throw err;
     }
-    throw err;
   }
+
+  throw new Error("AI request failed after multiple attempts.");
 };
 
 export default function Challenge() {
@@ -181,13 +224,20 @@ export default function Challenge() {
     const imageData = captureFrame(v);
     const required = toCode(targetEmotion);
     setJudging(true);
+    setDebugInfo(null);
     setJudgingMsg("Waking up AI server...");
 
     try {
-      const wakeCtrl = new AbortController();
-      setTimeout(() => wakeCtrl.abort(), 90000);
-      await fetch(`${AI_BASE}/warmup`, { signal: wakeCtrl.signal });
-    } catch {}
+      await waitForAiReady(90000);
+    } catch (error) {
+      setJudging(false);
+      alert(
+        error?.name === "AbortError"
+          ? "AI server is still waking up. Please wait a little longer and try again."
+          : "Could not reach the AI service. Check the Render service and the /api/ai proxy configuration."
+      );
+      return;
+    }
 
     setJudgingMsg("Sending to AI...");
 
@@ -205,6 +255,11 @@ export default function Challenge() {
       [t1, t2, t3].forEach(clearTimeout);
 
       if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+      const contentType = resp.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("AI service returned a non-JSON response.");
+      }
 
       const data = await resp.json();
       const emotion = String(data.emotion || "").toUpperCase();
@@ -235,6 +290,8 @@ export default function Challenge() {
 
       if (err.name === "AbortError") {
         alert("Server took too long even after retry. Wait 60 seconds and try again.");
+      } else if (err instanceof TypeError || /Failed to fetch/i.test(String(err.message || ""))) {
+        alert("Could not reach the AI service. Make sure the Render service is awake and the Vercel /api/ai rewrite is deployed.");
       } else {
         alert(`Error: ${err.message}`);
       }
