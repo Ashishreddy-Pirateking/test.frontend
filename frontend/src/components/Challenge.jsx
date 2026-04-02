@@ -13,13 +13,13 @@ const EMOTIONS_LIST = [
 ];
 
 const resolveAiBase = (value) =>
-  String(value || "/api/ai")
+  String(value || "https://navarasa-ai-api.onrender.com")
     .trim()
     .replace(/\/predict\/?$/, "")
     .replace(/\/+$/, "");
 
 const configuredAiBase = resolveAiBase(import.meta.env.VITE_AI_API_URL);
-const AI_BASE = configuredAiBase.startsWith("/") ? configuredAiBase : "/api/ai";
+const AI_BASE = configuredAiBase || "https://navarasa-ai-api.onrender.com";
 const AI_URL = `${AI_BASE}/predict`;
 const AI_WAKE_URL = `${AI_BASE}/warmup`;
 
@@ -234,7 +234,7 @@ export default function Challenge() {
       alert(
         error?.name === "AbortError"
           ? "AI server is still waking up. Please wait a little longer and try again."
-          : "Could not reach the AI service. Check the Render service and the /api/ai proxy configuration."
+          : "Could not reach the AI service on Render. Check that the ML service is deployed and awake."
       );
       return;
     }
@@ -249,7 +249,7 @@ export default function Challenge() {
       const resp = await fetchWithRetry(AI_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageData, targetEmotion: required }),
+        body: JSON.stringify({ image: imageData, targetEmotion: required, fast: true }),
       }, 150000);
 
       [t1, t2, t3].forEach(clearTimeout);
@@ -291,7 +291,7 @@ export default function Challenge() {
       if (err.name === "AbortError") {
         alert("Server took too long even after retry. Wait 60 seconds and try again.");
       } else if (err instanceof TypeError || /Failed to fetch/i.test(String(err.message || ""))) {
-        alert("Could not reach the AI service. Make sure the Render service is awake and the Vercel /api/ai rewrite is deployed.");
+        alert("Could not reach the AI service on Render. Make sure the service is awake and accessible.");
       } else {
         alert(`Error: ${err.message}`);
       }

@@ -1,7 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/ai", "destination": "https://navarasa-ai-api.onrender.com/" },
-    { "source": "/api/ai/:path*", "destination": "https://navarasa-ai-api.onrender.com/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
