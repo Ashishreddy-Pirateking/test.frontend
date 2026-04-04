@@ -12,17 +12,6 @@ const EMOTIONS_LIST = [
   "ADBHUTA (Wonder)",
 ];
 
-const resolveAiBase = (value) =>
-  String(value || "https://navarasa-ai-api.onrender.com")
-    .trim()
-    .replace(/\/predict\/?$/, "")
-    .replace(/\/+$/, "");
-
-const configuredAiBase = resolveAiBase(import.meta.env.VITE_AI_API_URL);
-const AI_BASE = configuredAiBase || "https://navarasa-ai-api.onrender.com";
-const AI_URL = `${AI_BASE}/predict`;
-const AI_WAKE_URL = `${AI_BASE}/warmup`;
-
 const shuffled = (arr) => {
   const c = [...arr];
   for (let i = c.length - 1; i > 0; i--) {
@@ -34,113 +23,242 @@ const shuffled = (arr) => {
 
 const toCode = (label) => String(label || "").split(" ")[0].trim().toUpperCase();
 
+// Exact comments from the spreadsheet — 10 bands per emotion
+// Index 0 = 0-10, Index 1 = 11-20, ..., Index 9 = 91-100
 const COMMENTS = {
-  HASYA: {0:'Mokam endhuku ala pettav',11:'Muthi meedha mekulu kottara',21:'Endhuku pudutharo kuuda thelidhu',31:'Navvu bro koncham em kaadhu',41:'Parledhu serials lo act cheyochu',51:'Okay Movies lo side character cheyochu',61:'Noiceeee',71:'Heroooooooo',81:'Koncham lo national award miss ayyindhi bro',91:'Attttt Kamal Hassan'},
-  KARUNA: {0:'karuna chupinchali, kaamam kaadhu',11:'Nidra po analedhu, karuna chupinchamanam',21:'Kothi la pettav enti bro mokam',31:'Ni meedha evaraina karunisthe baagundu',41:'Parledhu, okay',51:'Noiceee, keep it up',61:'Acting ochu ayithe baane',71:'Mercy mercy mercy, ankara Mercy',81:'Anthe anthe ochesindhi, inkoncham',91:'Attttt Sai Baba'},
-  RAUDRA: {0:'Edsinatte undhi',11:'mokam sarey, kopam ekkada undhi',21:'Pilla bacha kopam idhi',31:'Pandu kothi la bale unnav bhaii',41:'kallu pedhaga chesthe kopam avvadhu nana',51:'Oopiri pilchuko lekapothe poye la unnav',61:'Eyyuuu anna',71:'Ammo bayam vesthundhi baboi',81:'Pedha actor eh',91:'Hey Arjun Reddy lo hero nuvve ga?'},
-  VEERA: {0:'Comedian la unnav',11:'Mokam enti ila undhi',21:'Enti ala chusthunav, ee score eh ekkuva peh',31:'Raju kaadhu kani, mantri ayithe okay',41:'Close, inkocham try cheyi',51:'Parledhu, okka chinna rajyam ivvochu',61:'Antha okay kaani edho missing king gaaru',71:'Abba abba em tejasuu bidda',81:'Meeru KGP Rajyam Prince ah?',91:'Raju Ekkada unna Raju eh'},
-  BHAYANAKA: {0:'Enthasepu inka act cheyadaniki',11:'Asalu baale',21:'abacha enti idhi bayame?',31:'Bayapettu analedhu, bayapadu annam',41:'Not bad, kaani inka bayam la ledhu',51:'Eyuuuu',61:'Baane bayapaduthunav',71:'Crush ni make-up lekunda chusava?',81:'Results annouce ayinattu unnayi, chaala bayapaduthunadu paapam',91:'Mana Main character Dhorikesar ayya'},
-  BIBHATSA: {0:'Nuvve disgusting ga unnav',11:'inkoncham pettochu ga expression',21:'inkoncham pettochu ga expression',31:'inkoncham pettochu ga expression',41:'Parledhu, okay',51:'Antha dharidranga undha?',61:'Em act chesthunav bro. Wah',71:'Yes idhi actor ki undalsina skill level',81:'Em chusav Mowa antha dhaarunanga',91:'Eyuuu actor'},
-  ADBHUTA: {0:'Chi',11:'Adbhutanga cheyi annam, asahyanga kaadhu',21:'idhi acting ah?',31:'Endhuku intha lazy ga unnav',41:'Koncham expression kuuda pettalsindhi',51:'Parledhu, okay',61:'Anni subjects pass ayipoyava',71:'Crush ni saree lo chusina moment',81:'Chaala Adbhutanga undhi Chowdharaa',91:'WOWwww Noiceee'},
-  SHANTA: {0:'Yukkkkk',11:'Shantanga ekkada unnav?',21:'Enti idhi peaceful ah?',31:'Asale baaledhu',41:'Idhi eh ekkuva peh',51:'Peace',61:'Wars ni aapesela unnav ga',71:'Ah chiru navvu chudu eyuuu',81:'Gandhi jayanti ni birthday roju eh na?',91:'Bhudhudi la bale shantanga unnav ayya'},
-  SHRINGARA: {0:'blehhh ewww',11:'Enti idhi, ah maaku enti idhi antunna',21:'Chi',31:'kastame bro ila ayithe partner raavadam',41:'Ela padutharu anukuntunav ila evarraina',51:'Ayya baboiiii siguuuu ehhhhh',61:'ey ey eyyyyyyy',71:'Edho anukunamu kaani andi, maamulu vaaru kaadhandi',81:'Ahaaaannnn',91:'Rasikudive'},
+  HASYA: [
+    "Mokam endhuku ala pettav",                      // 0-10
+    "Muthi meedha mekulu kottara",                   // 11-20
+    "Endhuku pudutharo kuuda thelidhu",              // 21-30
+    "Navvu bro koncham em kaadhu",                   // 31-40
+    "Parledhu serials lo act cheyochu",              // 41-50
+    "Okay Movies lo side character cheyochu",        // 51-60
+    "Noiceeee",                                      // 61-70
+    "Heroooooooo",                                   // 71-80
+    "Koncham lo national award miss ayyindhi bro",   // 81-90
+    "Attttt Kamal Hassan",                           // 91-100
+  ],
+  KARUNA: [
+    "karuna chupinchali, kaamam kaadhu",
+    "Nidra po analedhu, karuna chupinchamanam",
+    "Kothi la pettav enti bro mokam",
+    "Ni meedha evaraina karunisthe baagundu",
+    "Parledhu, okay",
+    "Noiceee, keep it up",
+    "Acting ochu ayithe baane",
+    "Mercy mercy mercy, ankara Mercy",
+    "Anthe anthe ochesindhi, inkoncham",
+    "Attttt Sai Baba",
+  ],
+  RAUDRA: [
+    "Edsinatte undhi",
+    "mokam sarey, kopam ekkada undhi",
+    "Pilla bacha kopam idhi",
+    "Pandu kothi la bale unnav bhaii",
+    "kallu pedhaga chesthe kopam avvadhu nana",
+    "Oopiri pilchuko lekapothe poye la unnav",
+    "Eyyuuu anna",
+    "Ammo bayam vesthundhi baboi",
+    "Pedha actor eh",
+    "Hey Arjun Reddy lo hero nuvve ga?",
+  ],
+  VEERA: [
+    "Comedian la unnav",
+    "Mokam enti ila undhi",
+    "Enti ala chusthunav, ee score eh ekkuva peh",
+    "Raju kaadhu kani, mantri ayithe okay",
+    "Close, inkocham try cheyi",
+    "Parledhu, okka chinna rajyam ivvochu",
+    "Antha okay kaani edho missing king gaaru",
+    "Abba abba em tejasuu bidda",
+    "Meeru KGP Rajyam Prince ah?",
+    "Raju Ekkada unna Raju eh",
+  ],
+  BHAYANAKA: [
+    "Enthasepu inka act cheyadaniki",
+    "Asalu baale",
+    "abacha enti idhi bayame?",
+    "Bayapettu analedhu, bayapadu annam",
+    "Not bad, kaani inka bayam la ledhu",
+    "Eyuuuu",
+    "Baane bayapaduthunav",
+    "Crush ni make-up lekunda chusava?",
+    "Results annouce ayinattu unnayi, chaala bayapaduthunadu paapam",
+    "Mana Main character Dhorikesar ayya",
+  ],
+  BIBHATSA: [
+    "Nuvve disgusting ga unnav",
+    "inkoncham pettochu ga expression",
+    "inkoncham pettochu ga expression",
+    "inkoncham pettochu ga expression",
+    "Parledhu, okay",
+    "Antha dharidranga undha?",
+    "Em act chesthunav bro. Wah",
+    "Yes idhi actor ki undalsina skill level",
+    "Em chusav Mowa antha dhaarunanga",
+    "Eyuuu actor",
+  ],
+  ADBHUTA: [
+    "Chi",
+    "Adbhutanga cheyi annam, asahyanga kaadhu",
+    "idhi acting ah?",
+    "Endhuku intha lazy ga unnav",
+    "Koncham expression kuuda pettalsindhi",
+    "Parledhu, okay",
+    "Anni subjects pass ayipoyava",
+    "Crush ni saree lo chusina moment",
+    "Chaala Adbhutanga undhi Chowdharaa",
+    "WOWwww Noiceee",
+  ],
+  SHANTA: [
+    "Yukkkkk",
+    "Shantanga ekkada unnav?",
+    "Enti idhi peaceful ah?",
+    "Asale baaledhu",
+    "Idhi eh ekkuva peh",
+    "Peace",
+    "Wars ni aapesela unnav ga",
+    "Ah chiru navvu chudu eyuuu",
+    "Gandhi jayanti ni birthday roju eh na?",
+    "Bhudhudi la bale shantanga unnav ayya",
+  ],
+  SHRINGARA: [
+    "blehhh ewww",
+    "Enti idhi, ah maaku enti idhi antunna",
+    "Chi",
+    "kastame bro ila ayithe partner raavadam",
+    "Ela padutharu anukuntunav ila evarraina",
+    "Ayya baboiiii siguuuu ehhhhh",
+    "ey ey eyyyyyyy",
+    "Edho anukunamu kaani andi, maamulu vaaru kaadhandi",
+    "Ahaaaannnn",
+    "Rasikudive",
+  ],
 };
 
+// Get comment by score band: 0-10 → index 0, 11-20 → index 1, ..., 91-100 → index 9
 const getComment = (code, score) => {
   const bank = COMMENTS[code] || COMMENTS.HASYA;
-  for (const t of [91,81,71,61,51,41,31,21,11,0]) {
-    if (score >= t) return bank[t];
-  }
-  return bank[0];
+  const index = score >= 91 ? 9 : Math.floor(score / 10);
+  return bank[Math.min(9, Math.max(0, index))];
 };
 
-const wakeServer = () => {
-  fetch(AI_WAKE_URL, { method: "GET", cache: "no-store" }).catch(() => {});
+// Detailed emotion descriptions so Groq knows exactly what to look for
+const EMOTION_DESCRIPTIONS = {
+  SHRINGARA: "love, beauty, romance — soft dreamy eyes, gentle smile, warm admiring or seductive look",
+  RAUDRA: "fury, rage, intense anger — deeply furrowed brows, clenched jaw, flared nostrils, fierce blazing eyes",
+  HASYA: "laughter, joy, amusement — wide open smile, teeth showing, squinting happy eyes, cheeks raised",
+  KARUNA: "sorrow, compassion, deep sadness — drooping eyelids, downturned mouth, quivering lips, grief-stricken look",
+  BHAYANAKA: "terror, extreme fear — very wide eyes, raised brows, open mouth, frozen or shocked expression",
+  BIBHATSA: "disgust, revulsion — strongly wrinkled nose, curled upper lip, squinted eyes, repulsed face pulled back",
+  SHANTA: "peace, calm, serenity — completely relaxed face, soft gentle eyes, no tension, neutral or very slight smile",
+  VEERA: "heroism, courage, bold confidence — strong set jaw, determined eyes, chin raised, proud commanding expression",
+  ADBHUTA: "wonder, astonishment, awe — raised brows, very wide eyes, open mouth in O-shape, visibly amazed",
 };
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-// Capture frame with brightness/contrast boost for dark environments
+// Capture frame — un-mirror for AI, brighten for low-light rooms
 const captureFrame = (videoEl) => {
-  const sourceWidth = videoEl.videoWidth;
-  const sourceHeight = videoEl.videoHeight;
-  const scale = Math.min(1, 480 / Math.max(sourceWidth, sourceHeight));
-  const w = Math.max(1, Math.round(sourceWidth * scale));
-  const h = Math.max(1, Math.round(sourceHeight * scale));
+  const sw = videoEl.videoWidth;
+  const sh = videoEl.videoHeight;
+  const scale = Math.min(1, 480 / Math.max(sw, sh));
+  const w = Math.max(1, Math.round(sw * scale));
+  const h = Math.max(1, Math.round(sh * scale));
 
-  // First canvas: draw the video (un-mirrored — DeepFace doesn't need mirroring)
   const c1 = document.createElement("canvas");
-  c1.width = w;
-  c1.height = h;
+  c1.width = w; c1.height = h;
   const ctx1 = c1.getContext("2d");
+  ctx1.translate(w, 0);
+  ctx1.scale(-1, 1);
   ctx1.drawImage(videoEl, 0, 0, w, h);
 
-  // Second canvas: apply brightness + contrast boost
   const c2 = document.createElement("canvas");
-  c2.width = w;
-  c2.height = h;
+  c2.width = w; c2.height = h;
   const ctx2 = c2.getContext("2d");
-  ctx2.filter = "brightness(1.5) contrast(1.3)";
+  ctx2.filter = "brightness(1.4) contrast(1.2)";
   ctx2.drawImage(c1, 0, 0);
 
-  return c2.toDataURL("image/jpeg", 0.92);
+  return c2.toDataURL("image/jpeg", 0.85);
 };
 
-const waitForAiReady = async (timeoutMs = 90000) => {
-  const startTime = Date.now();
-  let lastError = null;
+const judgeExpressionWithGroq = async (imageDataUrl, targetEmotionCode) => {
+  const description = EMOTION_DESCRIPTIONS[targetEmotionCode] || targetEmotionCode;
+  const base64Image = imageDataUrl.split(",")[1];
 
-  while (Date.now() - startTime < timeoutMs) {
-    try {
-      const response = await fetch(AI_WAKE_URL, {
-        method: "GET",
-        cache: "no-store",
-      });
-      if (response.ok) return;
-      lastError = new Error(`AI wake check returned ${response.status}`);
-    } catch (error) {
-      lastError = error;
-    }
-    await sleep(3000);
+  const prompt = `You are a precise acting judge for the Indian classical Navarasa (nine emotions) challenge.
+
+The person was asked to perform: ${targetEmotionCode}
+What ${targetEmotionCode} looks like: ${description}
+
+TASK: Examine their facial expression and score how well they performed ${targetEmotionCode}.
+
+SCORING GUIDE (be accurate — not too harsh, not too generous):
+- 25-35: They tried but barely any expression visible, or completely wrong emotion
+- 36-50: Recognizable attempt but weak and unconvincing
+- 51-65: Decent — clearly trying the right emotion, somewhat convincing
+- 66-80: Good performance — emotion is clearly visible and convincing
+- 81-90: Very strong — impressive expressive performance
+- 91-100: Exceptional — could fool a casting director
+
+KEY RULES:
+- Minimum score is 25. Everyone gets credit for showing up.
+- If they're doing a clearly DIFFERENT emotion (e.g. smiling when asked for anger), give 25-35.
+- A plain neutral face with no expression for any emotion = 25-30.
+- A genuinely strong matching expression = 70+. Don't lowball good performances.
+- Be honest and calibrated. Think like a film director, not a cheerleader.
+
+Respond ONLY with valid JSON (no markdown, no explanation outside the JSON):
+{"score": 72, "detected": "HASYA", "matched": true, "reason": "Clear wide smile with raised cheeks, very convincing laughter"}
+
+"detected": what emotion you actually see — one of: SHRINGARA, RAUDRA, HASYA, KARUNA, BHAYANAKA, BIBHATSA, SHANTA, VEERA, ADBHUTA, or NEUTRAL
+"matched": true only if detected reasonably matches ${targetEmotionCode}`;
+
+  const response = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      max_tokens: 200,
+      temperature: 0.3,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: { url: `data:image/jpeg;base64,${base64Image}` },
+            },
+            { type: "text", text: prompt },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Groq API error ${response.status}: ${errText}`);
   }
 
-  throw lastError || new Error("AI server did not wake up in time.");
-};
+  const data = await response.json();
+  const rawText = data.choices?.[0]?.message?.content?.trim() || "";
+  const cleaned = rawText.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(cleaned);
 
-const fetchWithRetry = async (url, options, timeoutMs = 150000, retries = 2) => {
-  const attempt = async () => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const resp = await fetch(url, { ...options, signal: controller.signal });
-      clearTimeout(timer);
-      return resp;
-    } catch (err) {
-      clearTimeout(timer);
-      throw err;
-    }
+  // Hard enforce minimum of 25
+  const finalScore = Math.min(100, Math.max(25, Math.round(Number(parsed.score) || 25)));
+
+  return {
+    score: finalScore,
+    detected: String(parsed.detected || "NEUTRAL").toUpperCase(),
+    matched: Boolean(parsed.matched),
+    reason: String(parsed.reason || ""),
   };
-
-  for (let index = 0; index <= retries; index += 1) {
-    try {
-      const response = await attempt();
-      if ([502, 503, 504].includes(response.status) && index < retries) {
-        await sleep(4000 * (index + 1));
-        continue;
-      }
-      return response;
-    } catch (err) {
-      const retryableNetworkError =
-        err?.name === "AbortError" || err instanceof TypeError || /Failed to fetch/i.test(String(err?.message || ""));
-      if (retryableNetworkError && index < retries) {
-        await sleep(4000 * (index + 1));
-        continue;
-      }
-      throw err;
-    }
-  }
-
-  throw new Error("AI request failed after multiple attempts.");
 };
 
 export default function Challenge() {
@@ -155,10 +273,9 @@ export default function Challenge() {
   const [judgingMsg, setJudgingMsg] = useState("AI is judging...");
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("...");
-  const [debugInfo, setDebugInfo] = useState(null);
+  const [resultData, setResultData] = useState(null);
 
   useEffect(() => {
-    wakeServer();
     return () => stopStream();
   }, []);
 
@@ -180,9 +297,8 @@ export default function Challenge() {
     stopStream();
     setCameraReady(false);
     setJudging(false);
-    setDebugInfo(null);
+    setResultData(null);
     setPhase("camera");
-    wakeServer();
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -193,7 +309,8 @@ export default function Challenge() {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play()
+          videoRef.current
+            .play()
             .then(() => setTimeout(() => setCameraReady(true), 800))
             .catch(() => setCameraReady(true));
         };
@@ -217,83 +334,46 @@ export default function Challenge() {
 
     const v = videoRef.current;
     if (!v || !v.videoWidth || !v.videoHeight) {
-      alert("Camera not showing video yet. Wait a moment and try again.");
+      alert("Camera not ready yet. Wait a moment and try again.");
+      return;
+    }
+
+    if (!GROQ_API_KEY) {
+      alert("Groq API key not set. Add VITE_GROQ_API_KEY to your Vercel environment variables.");
       return;
     }
 
     const imageData = captureFrame(v);
     const required = toCode(targetEmotion);
+
     setJudging(true);
-    setDebugInfo(null);
-    setJudgingMsg("Waking up AI server...");
+    setJudgingMsg("Capturing your expression...");
+
+    const t1 = setTimeout(() => setJudgingMsg("Sending to AI judge..."), 1000);
+    const t2 = setTimeout(() => setJudgingMsg("AI is analyzing your face..."), 3000);
+    const t3 = setTimeout(() => setJudgingMsg("Almost done..."), 7000);
 
     try {
-      await waitForAiReady(90000);
-    } catch (error) {
-      setJudging(false);
-      alert(
-        error?.name === "AbortError"
-          ? "AI server is still waking up. Please wait a little longer and try again."
-          : "Could not reach the AI service on Render. Check that the ML service is deployed and awake."
-      );
-      return;
-    }
-
-    setJudgingMsg("Sending to AI...");
-
-    const t1 = setTimeout(() => setJudgingMsg("AI is analyzing your expression..."), 4000);
-    const t2 = setTimeout(() => setJudgingMsg("Processing on CPU, this takes ~30s..."), 15000);
-    const t3 = setTimeout(() => setJudgingMsg("Still working, almost done..."), 45000);
-
-    try {
-      const resp = await fetchWithRetry(AI_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageData, targetEmotion: required, fast: true }),
-      }, 150000);
-
+      const result = await judgeExpressionWithGroq(imageData, required);
       [t1, t2, t3].forEach(clearTimeout);
 
-      if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
-
-      const contentType = resp.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        throw new Error("AI service returned a non-JSON response.");
-      }
-
-      const data = await resp.json();
-      const emotion = String(data.emotion || "").toUpperCase();
-
-      setDebugInfo(data);
       stopStream();
       setJudging(false);
-
-      if (!emotion || emotion === "NO_FACE" || emotion === "ERROR") {
-        setScore(0);
-        setComment("__NOFACE__");
-        setPhase("result");
-        return;
-      }
-
-      const targetConf = Number(data.target_confidence || 0);
-      const dominantIsTarget = emotion === required;
-      let finalScore = Math.round(targetConf * 100 * 0.75 + (dominantIsTarget ? 25 : 0));
-      finalScore = Math.min(100, Math.max(0, finalScore));
-
-      setScore(finalScore);
-      setComment(getComment(required, finalScore));
+      setScore(result.score);
+      setComment(getComment(required, result.score));
+      setResultData(result);
       setPhase("result");
-
     } catch (err) {
       [t1, t2, t3].forEach(clearTimeout);
       setJudging(false);
+      console.error("Groq error:", err);
 
-      if (err.name === "AbortError") {
-        alert("Server took too long even after retry. Wait 60 seconds and try again.");
-      } else if (err instanceof TypeError || /Failed to fetch/i.test(String(err.message || ""))) {
-        alert("Could not reach the AI service on Render. Make sure the service is awake and accessible.");
+      if (err.message?.includes("401")) {
+        alert("Invalid Groq API key. Check your VITE_GROQ_API_KEY in Vercel.");
+      } else if (err.message?.includes("429")) {
+        alert("Rate limit hit. Wait a few seconds and try again.");
       } else {
-        alert(`Error: ${err.message}`);
+        alert(`Judgment failed: ${err.message}`);
       }
     }
   };
@@ -344,7 +424,10 @@ export default function Challenge() {
               {!cameraReady && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
-                    <div className="w-8 h-8 border-3 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-2" style={{ borderWidth: 3 }} />
+                    <div
+                      className="rounded-full animate-spin mx-auto mb-2 border-[#FFD700]"
+                      style={{ width: 32, height: 32, borderWidth: 3, borderStyle: "solid", borderTopColor: "transparent" }}
+                    />
                     <p className="text-[#FFD700] text-xs">Starting camera...</p>
                   </div>
                 </div>
@@ -355,7 +438,7 @@ export default function Challenge() {
                   <div className="text-center">
                     <div className="w-12 h-12 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                     <p className="text-[#FFD700] text-sm font-bold">{judgingMsg}</p>
-                    <p className="text-gray-400 text-xs mt-1">First analysis takes ~30-60s on free server</p>
+                    <p className="text-gray-400 text-xs mt-1">Powered by Groq AI — results in seconds</p>
                   </div>
                 </div>
               )}
@@ -388,30 +471,34 @@ export default function Challenge() {
 
         {phase === "result" && (
           <div className="relative bg-[#111] border-2 border-[#FFD700] rounded-lg p-8 max-w-lg mx-auto text-center">
-            {comment === "__NOFACE__" ? (
-              <>
-                <div className="text-5xl mb-4">😶</div>
-                <p className="text-white text-lg mb-2 font-bold">Face not detected</p>
-                <p className="text-gray-400 text-sm mb-3">
-                  Make sure your face is well-lit and centered. Move closer to the camera.
+            <div
+              className="text-6xl font-black mb-4"
+              style={{ color: score >= 70 ? "#22c55e" : score >= 45 ? "#FFD700" : "#ef4444" }}
+            >
+              {score}/100
+            </div>
+
+            <p className="text-xl text-white mb-4 italic">"{comment}"</p>
+
+            {resultData && (
+              <div className="mb-6 text-xs text-gray-500 space-y-1">
+                <p>
+                  Asked:{" "}
+                  <span className="text-[#FFD700]">{toCode(targetEmotion)}</span>
+                  {" · "}
+                  Detected:{" "}
+                  <span className={resultData.matched ? "text-green-400" : "text-red-400"}>
+                    {resultData.detected}
+                  </span>
+                  {" · "}
+                  {resultData.matched ? "✓ Matched" : "✗ No match"}
                 </p>
-                {debugInfo && (
-                  <p className="text-xs text-gray-600 mb-4 break-all font-mono text-left bg-black/40 p-2 rounded">
-                    Debug: {JSON.stringify(debugInfo)}
-                  </p>
+                {resultData.reason && (
+                  <p className="text-gray-600 italic">"{resultData.reason}"</p>
                 )}
-              </>
-            ) : (
-              <>
-                <div
-                  className="text-6xl font-black mb-4"
-                  style={{ color: score >= 70 ? "#22c55e" : "#FFD700" }}
-                >
-                  {score}/100
-                </div>
-                <p className="text-xl text-white mb-6 italic">"{comment}"</p>
-              </>
+              </div>
             )}
+
             <button
               onClick={openCamera}
               className="px-6 py-2 border border-[#FFD700] text-[#FFD700] uppercase hover:bg-[#FFD700] hover:text-black transition-colors"
