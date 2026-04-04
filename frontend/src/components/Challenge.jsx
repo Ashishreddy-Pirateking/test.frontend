@@ -23,20 +23,19 @@ const shuffled = (arr) => {
 
 const toCode = (label) => String(label || "").split(" ")[0].trim().toUpperCase();
 
-// Exact comments from the spreadsheet — 10 bands per emotion
-// Index 0 = 0-10, Index 1 = 11-20, ..., Index 9 = 91-100
+// Exact comments from spreadsheet — index 0=0-10, index 1=11-20, ..., index 9=91-100
 const COMMENTS = {
   HASYA: [
-    "Mokam endhuku ala pettav",                      // 0-10
-    "Muthi meedha mekulu kottara",                   // 11-20
-    "Endhuku pudutharo kuuda thelidhu",              // 21-30
-    "Navvu bro koncham em kaadhu",                   // 31-40
-    "Parledhu serials lo act cheyochu",              // 41-50
-    "Okay Movies lo side character cheyochu",        // 51-60
-    "Noiceeee",                                      // 61-70
-    "Heroooooooo",                                   // 71-80
-    "Koncham lo national award miss ayyindhi bro",   // 81-90
-    "Attttt Kamal Hassan",                           // 91-100
+    "Mokam endhuku ala pettav",
+    "Muthi meedha mekulu kottara",
+    "Endhuku pudutharo kuuda thelidhu",
+    "Navvu bro koncham em kaadhu",
+    "Parledhu serials lo act cheyochu",
+    "Okay Movies lo side character cheyochu",
+    "Noiceeee",
+    "Heroooooooo",
+    "Koncham lo national award miss ayyindhi bro",
+    "Attttt Kamal Hassan",
   ],
   KARUNA: [
     "karuna chupinchali, kaamam kaadhu",
@@ -136,37 +135,126 @@ const COMMENTS = {
   ],
 };
 
-// Get comment by score band: 0-10 → index 0, 11-20 → index 1, ..., 91-100 → index 9
 const getComment = (code, score) => {
   const bank = COMMENTS[code] || COMMENTS.HASYA;
-  const index = score >= 91 ? 9 : Math.floor(score / 10);
+  const index = score >= 100 ? 9 : Math.floor(score / 10);
   return bank[Math.min(9, Math.max(0, index))];
 };
 
-// Detailed emotion descriptions so Groq knows exactly what to look for
-const EMOTION_DESCRIPTIONS = {
-  SHRINGARA: "love, beauty, romance — soft dreamy eyes, gentle smile, warm admiring or seductive look",
-  RAUDRA: "fury, rage, intense anger — deeply furrowed brows, clenched jaw, flared nostrils, fierce blazing eyes",
-  HASYA: "laughter, joy, amusement — wide open smile, teeth showing, squinting happy eyes, cheeks raised",
-  KARUNA: "sorrow, compassion, deep sadness — drooping eyelids, downturned mouth, quivering lips, grief-stricken look",
-  BHAYANAKA: "terror, extreme fear — very wide eyes, raised brows, open mouth, frozen or shocked expression",
-  BIBHATSA: "disgust, revulsion — strongly wrinkled nose, curled upper lip, squinted eyes, repulsed face pulled back",
-  SHANTA: "peace, calm, serenity — completely relaxed face, soft gentle eyes, no tension, neutral or very slight smile",
-  VEERA: "heroism, courage, bold confidence — strong set jaw, determined eyes, chin raised, proud commanding expression",
-  ADBHUTA: "wonder, astonishment, awe — raised brows, very wide eyes, open mouth in O-shape, visibly amazed",
+// Per-emotion: exact facial muscle cues the AI should look for
+const EMOTION_RUBRIC = {
+  HASYA: {
+    description: "Laughter / Joy — HASYA rasa",
+    cues: [
+      "Are the corners of the mouth pulled up and wide? (zygomatic major muscle)",
+      "Are the cheeks raised and puffy?",
+      "Are the eyes narrowed or squinting from the smile (Duchenne marker)?",
+      "Are teeth visible?",
+      "Is the overall face energetic and bright?",
+    ],
+    wrongSignals: "flat mouth, downturned lips, furrowed brows, blank stare",
+  },
+  KARUNA: {
+    description: "Sorrow / Compassion — KARUNA rasa",
+    cues: [
+      "Are the inner corners of the eyebrows raised and drawn together (the grief brow)?",
+      "Is the mouth corners turned downward?",
+      "Are the eyelids heavy or drooping?",
+      "Is there any trembling or tension around the lips?",
+      "Does the overall face convey heaviness and sadness?",
+    ],
+    wrongSignals: "smiling, raised brows from surprise, wide eyes",
+  },
+  RAUDRA: {
+    description: "Fury / Rage — RAUDRA rasa",
+    cues: [
+      "Are the brows deeply furrowed and pulled together (corrugator muscle)?",
+      "Are the eyes glaring, intense, or wide with rage?",
+      "Is the jaw clenched or teeth showing in anger?",
+      "Are the nostrils flared?",
+      "Is there visible tension in the face, neck, or forehead?",
+    ],
+    wrongSignals: "relaxed brows, smiling, fearful wide eyes",
+  },
+  VEERA: {
+    description: "Heroism / Courage — VEERA rasa",
+    cues: [
+      "Is the chin slightly raised (pride and confidence)?",
+      "Is the jaw set firmly and strong?",
+      "Are the eyes determined and focused (not angry, not fearful)?",
+      "Is the overall posture and face commanding and authoritative?",
+      "Is there a sense of calm power — not aggression, but bold strength?",
+    ],
+    wrongSignals: "fear, anger, laughter, drooping posture",
+  },
+  BHAYANAKA: {
+    description: "Terror / Fear — BHAYANAKA rasa",
+    cues: [
+      "Are the eyes wide open, showing whites above or below iris?",
+      "Are the eyebrows raised high and drawn together?",
+      "Is the mouth open or stretched in shock?",
+      "Is there pallor or frozen quality to the face?",
+      "Does the face look like someone just saw something terrifying?",
+    ],
+    wrongSignals: "smiling, angry brows, calm expression",
+  },
+  BIBHATSA: {
+    description: "Disgust / Revulsion — BIBHATSA rasa",
+    cues: [
+      "Is the nose wrinkled (levator labii superioris alaeque nasi)?",
+      "Is the upper lip curled or raised on one or both sides?",
+      "Are the eyes narrowed or squinted with revulsion?",
+      "Is the face pulled back or turned slightly away?",
+      "Does the expression look like they smelled or saw something revolting?",
+    ],
+    wrongSignals: "open smile, wide eyes, neutral face",
+  },
+  SHANTA: {
+    description: "Peace / Calm — SHANTA rasa",
+    cues: [
+      "Is the face completely relaxed with no muscle tension?",
+      "Are the eyes soft, heavy-lidded, or gently closed?",
+      "Is there a very slight or no smile — serene, not happy?",
+      "Is the forehead smooth with no furrowing?",
+      "Does the whole face radiate stillness and inner calm?",
+    ],
+    wrongSignals: "tense brows, wide eyes, big smile, anger",
+  },
+  ADBHUTA: {
+    description: "Wonder / Amazement — ADBHUTA rasa",
+    cues: [
+      "Are the eyebrows raised high?",
+      "Are the eyes wide open and bright?",
+      "Is the mouth open in an 'O' or dropped-jaw expression?",
+      "Is there visible astonishment or being genuinely awestruck?",
+      "Does the face look like they just witnessed something magical?",
+    ],
+    wrongSignals: "closed mouth, neutral brows, angry or disgusted look",
+  },
+  SHRINGARA: {
+    description: "Love / Beauty / Romance — SHRINGARA rasa",
+    cues: [
+      "Are the eyes soft and warm, with a dreamy or admiring quality?",
+      "Is there a gentle, subtle smile — not a big laugh, but warm?",
+      "Is there a softness or glow to the whole face?",
+      "Do the eyes look like they're gazing at someone they adore?",
+      "Is there a romantic, tender, or seductive energy in the expression?",
+    ],
+    wrongSignals: "angry look, disgust, wide terror eyes, big open laughing mouth",
+  },
 };
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-// Capture frame — un-mirror for AI, brighten for low-light rooms
 const captureFrame = (videoEl) => {
   const sw = videoEl.videoWidth;
   const sh = videoEl.videoHeight;
-  const scale = Math.min(1, 480 / Math.max(sw, sh));
+  const scale = Math.min(1, 512 / Math.max(sw, sh));
   const w = Math.max(1, Math.round(sw * scale));
   const h = Math.max(1, Math.round(sh * scale));
 
+  // Un-mirror for AI
   const c1 = document.createElement("canvas");
   c1.width = w; c1.height = h;
   const ctx1 = c1.getContext("2d");
@@ -174,46 +262,57 @@ const captureFrame = (videoEl) => {
   ctx1.scale(-1, 1);
   ctx1.drawImage(videoEl, 0, 0, w, h);
 
+  // Enhance for low light
   const c2 = document.createElement("canvas");
   c2.width = w; c2.height = h;
   const ctx2 = c2.getContext("2d");
-  ctx2.filter = "brightness(1.4) contrast(1.2)";
+  ctx2.filter = "brightness(1.35) contrast(1.25) saturate(1.1)";
   ctx2.drawImage(c1, 0, 0);
 
-  return c2.toDataURL("image/jpeg", 0.85);
+  return c2.toDataURL("image/jpeg", 0.9);
 };
 
 const judgeExpressionWithGroq = async (imageDataUrl, targetEmotionCode) => {
-  const description = EMOTION_DESCRIPTIONS[targetEmotionCode] || targetEmotionCode;
+  const rubric = EMOTION_RUBRIC[targetEmotionCode];
   const base64Image = imageDataUrl.split(",")[1];
 
-  const prompt = `You are a precise acting judge for the Indian classical Navarasa (nine emotions) challenge.
+  const cueList = rubric.cues.map((c, i) => `  Cue ${i + 1}: ${c}`).join("\n");
 
-The person was asked to perform: ${targetEmotionCode}
-What ${targetEmotionCode} looks like: ${description}
+  const prompt = `You are an expert acting coach and facial expression analyst judging a Navarasa (Indian classical nine emotions) challenge.
 
-TASK: Examine their facial expression and score how well they performed ${targetEmotionCode}.
+TARGET EMOTION: ${targetEmotionCode} — ${rubric.description}
 
-SCORING GUIDE (be accurate — not too harsh, not too generous):
-- 25-35: They tried but barely any expression visible, or completely wrong emotion
-- 36-50: Recognizable attempt but weak and unconvincing
-- 51-65: Decent — clearly trying the right emotion, somewhat convincing
-- 66-80: Good performance — emotion is clearly visible and convincing
-- 81-90: Very strong — impressive expressive performance
-- 91-100: Exceptional — could fool a casting director
+YOUR JOB:
+Look at this person's face and evaluate how well they are performing ${targetEmotionCode}.
 
-KEY RULES:
-- Minimum score is 25. Everyone gets credit for showing up.
-- If they're doing a clearly DIFFERENT emotion (e.g. smiling when asked for anger), give 25-35.
-- A plain neutral face with no expression for any emotion = 25-30.
-- A genuinely strong matching expression = 70+. Don't lowball good performances.
-- Be honest and calibrated. Think like a film director, not a cheerleader.
+STEP 1 — Evaluate each facial cue independently (score 0-10 each):
+${cueList}
 
-Respond ONLY with valid JSON (no markdown, no explanation outside the JSON):
-{"score": 72, "detected": "HASYA", "matched": true, "reason": "Clear wide smile with raised cheeks, very convincing laughter"}
+STEP 2 — Check for wrong signals. Are they showing signs of a DIFFERENT emotion instead?
+Wrong signals for ${targetEmotionCode}: ${rubric.wrongSignals}
 
-"detected": what emotion you actually see — one of: SHRINGARA, RAUDRA, HASYA, KARUNA, BHAYANAKA, BIBHATSA, SHANTA, VEERA, ADBHUTA, or NEUTRAL
-"matched": true only if detected reasonably matches ${targetEmotionCode}`;
+STEP 3 — Compute final score:
+- Average your cue scores → multiply by 10 → this is your base (0-100)
+- If strong wrong signals are present, subtract 15-25 points
+- If the expression is genuinely convincing and natural, add 5-10 bonus
+- Minimum final score is 25 (everyone tried)
+- Be HONEST and ACCURATE. A real smile for HASYA should score 65-80. An exceptional one 85-95. Neutral face = 25-35. Wrong emotion = 25-40.
+
+IMPORTANT — avoid the low-score bias:
+- If someone is clearly making the right face, score them 60-80 confidently
+- Reserve 25-40 ONLY for truly blank, wrong, or non-existent expressions
+- A person making a genuine attempt with visible facial movement deserves at least 45-55
+
+Respond ONLY with this exact JSON (no markdown, no extra text, no explanation):
+{"cueScores":[7,8,6,7,5],"wrongSignals":false,"bonus":5,"finalScore":72,"detected":"HASYA","matched":true,"reason":"Wide genuine smile, raised cheeks, eyes squinting — convincing HASYA"}
+
+Rules for the JSON:
+- "cueScores": array of ${rubric.cues.length} integers 0-10
+- "wrongSignals": true if they're clearly doing a different emotion
+- "bonus": 0-10 bonus points for exceptional or natural expression
+- "finalScore": your computed final score (25-100)
+- "detected": what emotion you actually see (SHRINGARA/RAUDRA/HASYA/KARUNA/BHAYANAKA/BIBHATSA/SHANTA/VEERA/ADBHUTA/NEUTRAL)
+- "matched": true if detected reasonably matches ${targetEmotionCode}`;
 
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -223,8 +322,8 @@ Respond ONLY with valid JSON (no markdown, no explanation outside the JSON):
     },
     body: JSON.stringify({
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      max_tokens: 200,
-      temperature: 0.3,
+      max_tokens: 300,
+      temperature: 0.2,
       messages: [
         {
           role: "user",
@@ -250,8 +349,21 @@ Respond ONLY with valid JSON (no markdown, no explanation outside the JSON):
   const cleaned = rawText.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(cleaned);
 
-  // Hard enforce minimum of 25
-  const finalScore = Math.min(100, Math.max(25, Math.round(Number(parsed.score) || 25)));
+  // Compute score from cues if finalScore looks off
+  let computedScore = parsed.finalScore;
+  if (Array.isArray(parsed.cueScores) && parsed.cueScores.length > 0) {
+    const avgCue = parsed.cueScores.reduce((a, b) => a + Number(b), 0) / parsed.cueScores.length;
+    const fromCues = Math.round(avgCue * 10);
+    const bonus = Math.min(10, Math.max(0, Number(parsed.bonus) || 0));
+    const wrongPenalty = parsed.wrongSignals ? 20 : 0;
+    const cueComputed = Math.round(fromCues + bonus - wrongPenalty);
+
+    // Blend AI's finalScore with cue-computed score (70/30 weight)
+    computedScore = Math.round(parsed.finalScore * 0.7 + cueComputed * 0.3);
+  }
+
+  // Hard floor of 25, ceiling of 100
+  const finalScore = Math.min(100, Math.max(25, computedScore));
 
   return {
     score: finalScore,
@@ -349,9 +461,9 @@ export default function Challenge() {
     setJudging(true);
     setJudgingMsg("Capturing your expression...");
 
-    const t1 = setTimeout(() => setJudgingMsg("Sending to AI judge..."), 1000);
-    const t2 = setTimeout(() => setJudgingMsg("AI is analyzing your face..."), 3000);
-    const t3 = setTimeout(() => setJudgingMsg("Almost done..."), 7000);
+    const t1 = setTimeout(() => setJudgingMsg("AI is reading your face..."), 1200);
+    const t2 = setTimeout(() => setJudgingMsg("Analyzing each facial cue..."), 3500);
+    const t3 = setTimeout(() => setJudgingMsg("Computing your score..."), 7000);
 
     try {
       const result = await judgeExpressionWithGroq(imageData, required);
@@ -377,6 +489,9 @@ export default function Challenge() {
       }
     }
   };
+
+  const scoreColor =
+    score >= 70 ? "#22c55e" : score >= 45 ? "#FFD700" : "#ef4444";
 
   return (
     <section id="challenge" className="py-16 bg-black border-b border-[#222] relative overflow-hidden">
@@ -425,8 +540,12 @@ export default function Challenge() {
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
                     <div
-                      className="rounded-full animate-spin mx-auto mb-2 border-[#FFD700]"
-                      style={{ width: 32, height: 32, borderWidth: 3, borderStyle: "solid", borderTopColor: "transparent" }}
+                      className="rounded-full animate-spin mx-auto mb-2"
+                      style={{
+                        width: 32, height: 32,
+                        border: "3px solid #FFD700",
+                        borderTopColor: "transparent",
+                      }}
                     />
                     <p className="text-[#FFD700] text-xs">Starting camera...</p>
                   </div>
@@ -434,11 +553,18 @@ export default function Challenge() {
               )}
 
               {judging && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
-                  <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-[#FFD700] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/75 z-20">
+                  <div className="text-center px-4">
+                    <div
+                      className="rounded-full animate-spin mx-auto mb-3"
+                      style={{
+                        width: 48, height: 48,
+                        border: "4px solid #FFD700",
+                        borderTopColor: "transparent",
+                      }}
+                    />
                     <p className="text-[#FFD700] text-sm font-bold">{judgingMsg}</p>
-                    <p className="text-gray-400 text-xs mt-1">Powered by Groq AI — results in seconds</p>
+                    <p className="text-gray-400 text-xs mt-1">Groq AI — analyzing facial cues</p>
                   </div>
                 </div>
               )}
@@ -463,7 +589,7 @@ export default function Challenge() {
 
             {cameraReady && !judging && (
               <p className="text-xs text-gray-500 text-center pb-1">
-                Center your face • Ensure good lighting • Then click Judge Me
+                Center your face • Good lighting • Exaggerate the emotion • Then click Judge Me
               </p>
             )}
           </div>
@@ -471,10 +597,7 @@ export default function Challenge() {
 
         {phase === "result" && (
           <div className="relative bg-[#111] border-2 border-[#FFD700] rounded-lg p-8 max-w-lg mx-auto text-center">
-            <div
-              className="text-6xl font-black mb-4"
-              style={{ color: score >= 70 ? "#22c55e" : score >= 45 ? "#FFD700" : "#ef4444" }}
-            >
+            <div className="text-6xl font-black mb-4" style={{ color: scoreColor }}>
               {score}/100
             </div>
 
