@@ -23,7 +23,40 @@ const shuffled = (arr) => {
 
 const toCode = (label) => String(label || "").split(" ")[0].trim().toUpperCase();
 
-// Exact comments from spreadsheet — index 0=0-10, index 1=11-20, ..., index 9=91-100
+// Score ranges cycled from attempt 4 onwards [min, max]
+// Feels natural — not always going up, but never stuck low
+const NUDGE_RANGES = [
+  [60, 70],  // attempt 4
+  [50, 62],  // attempt 5
+  [70, 80],  // attempt 6
+  [55, 67],  // attempt 7
+  [73, 83],  // attempt 8
+  [62, 72],  // attempt 9
+  [78, 88],  // attempt 10
+  [65, 75],  // attempt 11+, cycles back
+];
+
+// Given attempt count (1-indexed) and the real AI score,
+// return the final score to show the user
+const applyAttemptNudge = (attemptNumber, realScore) => {
+  // First 3 attempts: show real AI score
+  if (attemptNumber <= 3) return realScore;
+
+  // Attempt 4+: pick a range from the cycle
+  const rangeIndex = (attemptNumber - 4) % NUDGE_RANGES.length;
+  const [min, max] = NUDGE_RANGES[rangeIndex];
+
+  // If the real score already falls inside the target range, use it as-is
+  // (keeps it feeling authentic when AI actually gets it right)
+  if (realScore >= min && realScore <= max) return realScore;
+
+  // Otherwise, nudge into the range — add slight randomness so it doesn't
+  // feel mechanical (e.g. always exactly 65)
+  const nudged = Math.round(min + Math.random() * (max - min));
+  return nudged;
+};
+
+// Exact comments from spreadsheet — index 0=0-10, ..., index 9=91-100
 const COMMENTS = {
   HASYA: [
     "Mokam endhuku ala pettav",
@@ -141,7 +174,6 @@ const getComment = (code, score) => {
   return bank[Math.min(9, Math.max(0, index))];
 };
 
-// Per-emotion: exact facial muscle cues the AI should look for
 const EMOTION_RUBRIC = {
   HASYA: {
     description: "Laughter / Joy — HASYA rasa",
@@ -254,7 +286,6 @@ const captureFrame = (videoEl) => {
   const w = Math.max(1, Math.round(sw * scale));
   const h = Math.max(1, Math.round(sh * scale));
 
-  // Un-mirror for AI
   const c1 = document.createElement("canvas");
   c1.width = w; c1.height = h;
   const ctx1 = c1.getContext("2d");
@@ -262,7 +293,6 @@ const captureFrame = (videoEl) => {
   ctx1.scale(-1, 1);
   ctx1.drawImage(videoEl, 0, 0, w, h);
 
-  // Enhance for low light
   const c2 = document.createElement("canvas");
   c2.width = w; c2.height = h;
   const ctx2 = c2.getContext("2d");
@@ -275,7 +305,6 @@ const captureFrame = (videoEl) => {
 const judgeExpressionWithGroq = async (imageDataUrl, targetEmotionCode) => {
   const rubric = EMOTION_RUBRIC[targetEmotionCode];
   const base64Image = imageDataUrl.split(",")[1];
-
   const cueList = rubric.cues.map((c, i) => `  Cue ${i + 1}: ${c}`).join("\n");
 
   const prompt = `You are an expert acting coach and facial expression analyst judging a Navarasa (Indian classical nine emotions) challenge.
@@ -303,16 +332,16 @@ IMPORTANT — avoid the low-score bias:
 - Reserve 25-40 ONLY for truly blank, wrong, or non-existent expressions
 - A person making a genuine attempt with visible facial movement deserves at least 45-55
 
-Respond ONLY with this exact JSON (no markdown, no extra text, no explanation):
+Respond ONLY with this exact JSON (no markdown, no extra text):
 {"cueScores":[7,8,6,7,5],"wrongSignals":false,"bonus":5,"finalScore":72,"detected":"HASYA","matched":true,"reason":"Wide genuine smile, raised cheeks, eyes squinting — convincing HASYA"}
 
-Rules for the JSON:
+Rules:
 - "cueScores": array of ${rubric.cues.length} integers 0-10
 - "wrongSignals": true if they're clearly doing a different emotion
-- "bonus": 0-10 bonus points for exceptional or natural expression
-- "finalScore": your computed final score (25-100)
-- "detected": what emotion you actually see (SHRINGARA/RAUDRA/HASYA/KARUNA/BHAYANAKA/BIBHATSA/SHANTA/VEERA/ADBHUTA/NEUTRAL)
-- "matched": true if detected reasonably matches ${targetEmotionCode}`;
+- "bonus": 0-10
+- "finalScore": 25-100
+- "detected": SHRINGARA/RAUDRA/HASYA/KARUNA/BHAYANAKA/BIBHATSA/SHANTA/VEERA/ADBHUTA/NEUTRAL
+- "matched": true if detected matches ${targetEmotionCode}`;
 
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -349,7 +378,7 @@ Rules for the JSON:
   const cleaned = rawText.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(cleaned);
 
-  // Compute score from cues if finalScore looks off
+  // Blend AI finalScore (70%) with cue-computed score (30%) for accuracy
   let computedScore = parsed.finalScore;
   if (Array.isArray(parsed.cueScores) && parsed.cueScores.length > 0) {
     const avgCue = parsed.cueScores.reduce((a, b) => a + Number(b), 0) / parsed.cueScores.length;
@@ -357,16 +386,13 @@ Rules for the JSON:
     const bonus = Math.min(10, Math.max(0, Number(parsed.bonus) || 0));
     const wrongPenalty = parsed.wrongSignals ? 20 : 0;
     const cueComputed = Math.round(fromCues + bonus - wrongPenalty);
-
-    // Blend AI's finalScore with cue-computed score (70/30 weight)
     computedScore = Math.round(parsed.finalScore * 0.7 + cueComputed * 0.3);
   }
 
-  // Hard floor of 25, ceiling of 100
-  const finalScore = Math.min(100, Math.max(25, computedScore));
+  const rawScore = Math.min(100, Math.max(25, computedScore));
 
   return {
-    score: finalScore,
+    rawScore,
     detected: String(parsed.detected || "NEUTRAL").toUpperCase(),
     matched: Boolean(parsed.matched),
     reason: String(parsed.reason || ""),
@@ -377,6 +403,9 @@ export default function Challenge() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const deckRef = useRef([]);
+
+  // Track total attempts this session (persists across Try Another clicks)
+  const attemptCountRef = useRef(0);
 
   const [phase, setPhase] = useState("idle");
   const [targetEmotion, setTargetEmotion] = useState("...");
@@ -458,6 +487,10 @@ export default function Challenge() {
     const imageData = captureFrame(v);
     const required = toCode(targetEmotion);
 
+    // Increment attempt counter BEFORE judging
+    attemptCountRef.current += 1;
+    const thisAttempt = attemptCountRef.current;
+
     setJudging(true);
     setJudgingMsg("Capturing your expression...");
 
@@ -469,15 +502,20 @@ export default function Challenge() {
       const result = await judgeExpressionWithGroq(imageData, required);
       [t1, t2, t3].forEach(clearTimeout);
 
+      // Apply nudge for repeat users (attempt 4+)
+      const finalScore = applyAttemptNudge(thisAttempt, result.rawScore);
+
       stopStream();
       setJudging(false);
-      setScore(result.score);
-      setComment(getComment(required, result.score));
-      setResultData(result);
+      setScore(finalScore);
+      setComment(getComment(required, finalScore));
+      setResultData({ ...result, score: finalScore });
       setPhase("result");
     } catch (err) {
       [t1, t2, t3].forEach(clearTimeout);
       setJudging(false);
+      // Roll back attempt count if the call failed (don't penalise errors)
+      attemptCountRef.current -= 1;
       console.error("Groq error:", err);
 
       if (err.message?.includes("401")) {
