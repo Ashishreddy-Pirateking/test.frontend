@@ -3,9 +3,11 @@ import { createDefaultSiteContent } from "../data/defaultSiteContent";
 import { resolveMediaUrl } from "../utils/media";
 import {
   fetchAdminSiteContent,
+  refreshPublicSiteSnapshot,
   updateAdminSiteContent,
   uploadAdminImage,
 } from "../services/service";
+import { mergeSiteContent, writeCachedSiteContent } from "../utils/siteContent";
 
 const deepClone = (value) => JSON.parse(JSON.stringify(value));
 const arrayToLines = (items) => (Array.isArray(items) ? items.join("\n") : "");
@@ -236,7 +238,17 @@ export default function AdminPanel() {
       };
 
       await updateAdminSiteContent(token, payload);
-      setMessage("Content saved successfully.");
+      writeCachedSiteContent(mergeSiteContent(payload));
+
+      let savedMessage = "Content saved successfully.";
+      try {
+        await refreshPublicSiteSnapshot();
+        savedMessage = "Content saved successfully. Live snapshot refreshed.";
+      } catch {
+        savedMessage = "Content saved successfully. Live snapshot will refresh when the snapshot endpoint is available.";
+      }
+
+      setMessage(savedMessage);
       await loadContent();
     } catch (err) {
       if (isUnauthorizedError(err)) {

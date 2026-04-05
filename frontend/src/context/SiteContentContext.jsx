@@ -2,6 +2,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createDefaultSiteContent } from "../data/defaultSiteContent";
 import { fetchPublicSiteContent } from "../services/service";
+import {
+  mergeSiteContent,
+  readCachedSiteContent,
+  writeCachedSiteContent,
+} from "../utils/siteContent";
 
 const SiteContentContext = createContext({
   siteContent: createDefaultSiteContent(),
@@ -11,57 +16,6 @@ const SiteContentContext = createContext({
 });
 
 const AUTO_REFRESH_MS = 15000;
-const SITE_CONTENT_CACHE_KEY = "prasthanam_public_site_content";
-
-const mergeSiteContent = (incoming) => {
-  const fallback = createDefaultSiteContent();
-  if (!incoming || typeof incoming !== "object") return fallback;
-  return {
-    ...fallback,
-    ...incoming,
-    gallery: {
-      ...fallback.gallery,
-      ...(incoming.gallery || {}),
-      images: Array.isArray(incoming.gallery?.images)
-        ? incoming.gallery.images
-        : fallback.gallery.images,
-    },
-    timeline: Array.isArray(incoming.timeline) && incoming.timeline.length
-      ? incoming.timeline
-      : fallback.timeline,
-    navarasas: Array.isArray(incoming.navarasas) && incoming.navarasas.length
-      ? incoming.navarasas
-      : fallback.navarasas,
-    castBatches: Array.isArray(incoming.castBatches) && incoming.castBatches.length
-      ? incoming.castBatches
-      : fallback.castBatches,
-    governors: Array.isArray(incoming.governors) && incoming.governors.length
-      ? incoming.governors
-      : fallback.governors,
-    latestEvent: {
-      ...fallback.latestEvent,
-      ...(incoming.latestEvent || {}),
-    },
-  };
-};
-
-const readCachedSiteContent = () => {
-  try {
-    const raw = localStorage.getItem(SITE_CONTENT_CACHE_KEY);
-    if (!raw) return createDefaultSiteContent();
-    return mergeSiteContent(JSON.parse(raw));
-  } catch {
-    return createDefaultSiteContent();
-  }
-};
-
-const writeCachedSiteContent = (content) => {
-  try {
-    localStorage.setItem(SITE_CONTENT_CACHE_KEY, JSON.stringify(content));
-  } catch {
-    // Ignore storage write failures and keep runtime state.
-  }
-};
 
 export function SiteContentProvider({ children }) {
   const [siteContent, setSiteContent] = useState(readCachedSiteContent);

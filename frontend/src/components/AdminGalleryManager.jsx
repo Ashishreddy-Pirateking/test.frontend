@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createDefaultSiteContent } from "../data/defaultSiteContent";
+import { refreshPublicSiteSnapshot } from "../services/service";
 import { getApiBase, resolveMediaUrl } from "../utils/media";
+import { mergeSiteContent, writeCachedSiteContent } from "../utils/siteContent";
 
 const API_BASE = getApiBase();
 
@@ -67,31 +69,27 @@ export default function AdminGalleryManager() {
     [content.gallery?.images]
   );
 
-  const withAuth = (options = {}) => ({
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  const logout = (redirectPath = "/") => {
+  const logout = useCallback((redirectPath = "/") => {
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_profile");
     window.location.href = redirectPath;
-  };
+  }, []);
 
-  const handleUnauthorized = async (response) => {
+  const handleUnauthorized = useCallback(async (response) => {
     if (response.status !== 401) return false;
     logout("/admin-login");
     return true;
-  };
+  }, [logout]);
 
-  const loadContent = async () => {
+  const loadContent = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE}/api/content/admin`, withAuth());
+      const response = await fetch(`${API_BASE}/api/content/admin`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (await handleUnauthorized(response)) return;
       const data = await parseApiResponse(response);
       if (!response.ok) throw new Error(data.message || "Failed to load gallery content.");
@@ -109,7 +107,7 @@ export default function AdminGalleryManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleUnauthorized, token]);
 
   useEffect(() => {
     if (!token) {
@@ -117,7 +115,7 @@ export default function AdminGalleryManager() {
       return;
     }
     loadContent();
-  }, [token]);
+  }, [loadContent, token]);
 
   const uploadImage = async (file) => {
     if (!file) return "";
@@ -128,10 +126,13 @@ export default function AdminGalleryManager() {
       formData.append("file", file);
       const response = await fetch(
         `${API_BASE}/api/content/admin/upload`,
-        withAuth({
+        {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
-        })
+        }
       );
       if (await handleUnauthorized(response)) return "";
       const data = await parseApiResponse(response);
@@ -158,19 +159,33 @@ export default function AdminGalleryManager() {
         navarasas: content.navarasas || [],
         castBatches: content.castBatches || [],
         governors: content.governors || [],
+        latestEvent: content.latestEvent || createDefaultSiteContent().latestEvent,
       };
       const response = await fetch(
         `${API_BASE}/api/content/admin`,
-        withAuth({
+        {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
-        })
+        }
       );
       if (await handleUnauthorized(response)) return;
       const data = await parseApiResponse(response);
       if (!response.ok) throw new Error(data.message || "Failed to save gallery.");
-      setMessage("Gallery saved successfully.");
+      writeCachedSiteContent(mergeSiteContent(payload));
+
+      let savedMessage = "Gallery saved successfully.";
+      try {
+        await refreshPublicSiteSnapshot();
+        savedMessage = "Gallery saved successfully. Live snapshot refreshed.";
+      } catch {
+        savedMessage = "Gallery saved successfully. Live snapshot will refresh when the snapshot endpoint is available.";
+      }
+
+      setMessage(savedMessage);
       await loadContent();
     } catch (err) {
       setError(err?.message || "Failed to save gallery.");

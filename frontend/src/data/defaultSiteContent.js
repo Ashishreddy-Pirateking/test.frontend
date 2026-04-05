@@ -1,4 +1,4 @@
-import { CAST_BATCHES, GOVERNORS, NAVARASAS, TIMELINE } from "./legacyData";
+import { CAST_BATCHES, GOVERNORS, NAVARASAS, TIMELINE } from "./legacyData.js";
 
 const cloneNavarasas = () =>
   NAVARASAS.map((item) => ({
