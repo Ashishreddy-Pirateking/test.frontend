@@ -23,9 +23,9 @@ const shuffled = (arr) => {
 
 const toCode = (label) => String(label || "").split(" ")[0].trim().toUpperCase();
 
-// Score ranges cycled from attempt 4 onwards — ONLY when emotion matched
-// Not a straight climb — feels natural and varied
-const NUDGE_RANGES = [
+// Nudge ranges for MATCHED emotion, attempt 4+
+// Varied — not always climbing, feels natural
+const MATCHED_NUDGE_RANGES = [
   [60, 70],  // attempt 4
   [50, 62],  // attempt 5
   [70, 80],  // attempt 6
@@ -36,33 +36,47 @@ const NUDGE_RANGES = [
   [65, 75],  // attempt 11+ cycles
 ];
 
+// Nudge ranges for MISMATCHED emotion — alternates low/high naturally
+// Never feels stuck, never feels rewarded — just unpredictable enough
+const MISMATCH_NUDGE_RANGES = [
+  [28, 38],  // attempt 1 — low
+  [42, 50],  // attempt 2 — medium
+  [30, 40],  // attempt 3 — low
+  [44, 52],  // attempt 4 — medium
+  [25, 35],  // attempt 5 — low
+  [40, 48],  // attempt 6 — medium
+  [32, 42],  // attempt 7 — low-medium
+  [44, 54],  // attempt 8 — medium
+];
+
 /**
- * Apply attempt-based nudge ONLY when emotion matched.
- * If NOT matched → cap score between 30-50 based on how expressive the raw score was.
+ * Apply scoring nudge based on attempt number and whether emotion matched.
+ *
+ * MATCHED:
+ *   - Attempts 1-3: real AI score
+ *   - Attempt 4+: cycle through MATCHED_NUDGE_RANGES (encouraging, varied)
+ *
+ * MISMATCHED:
+ *   - ALL attempts: cycle through MISMATCH_NUDGE_RANGES (low-high alternation)
+ *   - Never above 54, never feels stuck at same number
  */
 const applyAttemptNudge = (attemptNumber, rawScore, matched) => {
-  // Wrong emotion — cap between 30 and 50, slightly varying by expression level
   if (!matched) {
-    // If the AI detected SOME expression (rawScore > 50), give 40-50
-    // If it detected very little (rawScore <= 50), give 30-40
-    if (rawScore > 50) {
-      return Math.round(40 + Math.random() * 10); // 40-50
-    } else {
-      return Math.round(30 + Math.random() * 10); // 30-40
-    }
+    // Mismatch — always nudge into alternating low/high ranges
+    const rangeIndex = (attemptNumber - 1) % MISMATCH_NUDGE_RANGES.length;
+    const [min, max] = MISMATCH_NUDGE_RANGES[rangeIndex];
+    // If real score already in range, use it (keeps it feeling genuine)
+    if (rawScore >= min && rawScore <= max) return rawScore;
+    return Math.round(min + Math.random() * (max - min));
   }
 
-  // Correct emotion — first 3 attempts use real AI score
+  // Matched — first 3 attempts use real AI score
   if (attemptNumber <= 3) return rawScore;
 
-  // Correct emotion — attempt 4+ use nudge range
-  const rangeIndex = (attemptNumber - 4) % NUDGE_RANGES.length;
-  const [min, max] = NUDGE_RANGES[rangeIndex];
-
-  // If real score already inside target range, keep it (feels authentic)
+  // Matched — attempt 4+ use encouraging nudge ranges
+  const rangeIndex = (attemptNumber - 4) % MATCHED_NUDGE_RANGES.length;
+  const [min, max] = MATCHED_NUDGE_RANGES[rangeIndex];
   if (rawScore >= min && rawScore <= max) return rawScore;
-
-  // Otherwise nudge into range with slight randomness
   return Math.round(min + Math.random() * (max - min));
 };
 
@@ -390,7 +404,6 @@ Rules:
   const cleaned = rawText.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(cleaned);
 
-  // Blend AI finalScore (70%) with cue-computed score (30%)
   let computedScore = parsed.finalScore;
   if (Array.isArray(parsed.cueScores) && parsed.cueScores.length > 0) {
     const avgCue = parsed.cueScores.reduce((a, b) => a + Number(b), 0) / parsed.cueScores.length;
@@ -405,9 +418,7 @@ Rules:
 
   return {
     rawScore,
-    detected: String(parsed.detected || "NEUTRAL").toUpperCase(),
     matched: Boolean(parsed.matched),
-    reason: String(parsed.reason || ""),
   };
 };
 
@@ -424,7 +435,6 @@ export default function Challenge() {
   const [judgingMsg, setJudgingMsg] = useState("AI is judging...");
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("...");
-  const [resultData, setResultData] = useState(null);
 
   useEffect(() => {
     return () => stopStream();
@@ -448,7 +458,6 @@ export default function Challenge() {
     stopStream();
     setCameraReady(false);
     setJudging(false);
-    setResultData(null);
     setPhase("camera");
 
     try {
@@ -511,14 +520,12 @@ export default function Challenge() {
       const result = await judgeExpressionWithGroq(imageData, required);
       [t1, t2, t3].forEach(clearTimeout);
 
-      // Apply nudge — matched check is inside applyAttemptNudge
       const finalScore = applyAttemptNudge(thisAttempt, result.rawScore, result.matched);
 
       stopStream();
       setJudging(false);
       setScore(finalScore);
       setComment(getComment(required, finalScore));
-      setResultData({ ...result, score: finalScore });
       setPhase("result");
     } catch (err) {
       [t1, t2, t3].forEach(clearTimeout);
@@ -647,26 +654,7 @@ export default function Challenge() {
               {score}/100
             </div>
 
-            <p className="text-xl text-white mb-4 italic">"{comment}"</p>
-
-            {resultData && (
-              <div className="mb-6 text-xs text-gray-500 space-y-1">
-                <p>
-                  Asked:{" "}
-                  <span className="text-[#FFD700]">{toCode(targetEmotion)}</span>
-                  {" · "}
-                  Detected:{" "}
-                  <span className={resultData.matched ? "text-green-400" : "text-red-400"}>
-                    {resultData.detected}
-                  </span>
-                  {" · "}
-                  {resultData.matched ? "✓ Matched" : "✗ No match"}
-                </p>
-                {resultData.reason && (
-                  <p className="text-gray-600 italic">"{resultData.reason}"</p>
-                )}
-              </div>
-            )}
+            <p className="text-xl text-white mb-6 italic">"{comment}"</p>
 
             <button
               onClick={openCamera}
