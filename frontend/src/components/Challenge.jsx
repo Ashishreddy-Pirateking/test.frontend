@@ -23,8 +23,8 @@ const shuffled = (arr) => {
 
 const toCode = (label) => String(label || "").split(" ")[0].trim().toUpperCase();
 
-// Score ranges cycled from attempt 4 onwards [min, max]
-// Feels natural — not always going up, but never stuck low
+// Score ranges cycled from attempt 4 onwards — ONLY when emotion matched
+// Not a straight climb — feels natural and varied
 const NUDGE_RANGES = [
   [60, 70],  // attempt 4
   [50, 62],  // attempt 5
@@ -33,27 +33,37 @@ const NUDGE_RANGES = [
   [73, 83],  // attempt 8
   [62, 72],  // attempt 9
   [78, 88],  // attempt 10
-  [65, 75],  // attempt 11+, cycles back
+  [65, 75],  // attempt 11+ cycles
 ];
 
-// Given attempt count (1-indexed) and the real AI score,
-// return the final score to show the user
-const applyAttemptNudge = (attemptNumber, realScore) => {
-  // First 3 attempts: show real AI score
-  if (attemptNumber <= 3) return realScore;
+/**
+ * Apply attempt-based nudge ONLY when emotion matched.
+ * If NOT matched → cap score between 30-50 based on how expressive the raw score was.
+ */
+const applyAttemptNudge = (attemptNumber, rawScore, matched) => {
+  // Wrong emotion — cap between 30 and 50, slightly varying by expression level
+  if (!matched) {
+    // If the AI detected SOME expression (rawScore > 50), give 40-50
+    // If it detected very little (rawScore <= 50), give 30-40
+    if (rawScore > 50) {
+      return Math.round(40 + Math.random() * 10); // 40-50
+    } else {
+      return Math.round(30 + Math.random() * 10); // 30-40
+    }
+  }
 
-  // Attempt 4+: pick a range from the cycle
+  // Correct emotion — first 3 attempts use real AI score
+  if (attemptNumber <= 3) return rawScore;
+
+  // Correct emotion — attempt 4+ use nudge range
   const rangeIndex = (attemptNumber - 4) % NUDGE_RANGES.length;
   const [min, max] = NUDGE_RANGES[rangeIndex];
 
-  // If the real score already falls inside the target range, use it as-is
-  // (keeps it feeling authentic when AI actually gets it right)
-  if (realScore >= min && realScore <= max) return realScore;
+  // If real score already inside target range, keep it (feels authentic)
+  if (rawScore >= min && rawScore <= max) return rawScore;
 
-  // Otherwise, nudge into the range — add slight randomness so it doesn't
-  // feel mechanical (e.g. always exactly 65)
-  const nudged = Math.round(min + Math.random() * (max - min));
-  return nudged;
+  // Otherwise nudge into range with slight randomness
+  return Math.round(min + Math.random() * (max - min));
 };
 
 // Exact comments from spreadsheet — index 0=0-10, ..., index 9=91-100
@@ -225,10 +235,10 @@ const EMOTION_RUBRIC = {
       "Are the eyes wide open, showing whites above or below iris?",
       "Are the eyebrows raised high and drawn together?",
       "Is the mouth open or stretched in shock?",
-      "Is there pallor or frozen quality to the face?",
+      "Is there a frozen or paralysed quality to the face?",
       "Does the face look like someone just saw something terrifying?",
     ],
-    wrongSignals: "smiling, angry brows, calm expression",
+    wrongSignals: "smiling, angry brows, calm or neutral expression",
   },
   BIBHATSA: {
     description: "Disgust / Revulsion — BIBHATSA rasa",
@@ -257,7 +267,7 @@ const EMOTION_RUBRIC = {
     cues: [
       "Are the eyebrows raised high?",
       "Are the eyes wide open and bright?",
-      "Is the mouth open in an 'O' or dropped-jaw expression?",
+      "Is the mouth open in an O or dropped-jaw expression?",
       "Is there visible astonishment or being genuinely awestruck?",
       "Does the face look like they just witnessed something magical?",
     ],
@@ -269,7 +279,7 @@ const EMOTION_RUBRIC = {
       "Are the eyes soft and warm, with a dreamy or admiring quality?",
       "Is there a gentle, subtle smile — not a big laugh, but warm?",
       "Is there a softness or glow to the whole face?",
-      "Do the eyes look like they're gazing at someone they adore?",
+      "Do the eyes look like they are gazing at someone they adore?",
       "Is there a romantic, tender, or seductive energy in the expression?",
     ],
     wrongSignals: "angry look, disgust, wide terror eyes, big open laughing mouth",
@@ -317,31 +327,33 @@ Look at this person's face and evaluate how well they are performing ${targetEmo
 STEP 1 — Evaluate each facial cue independently (score 0-10 each):
 ${cueList}
 
-STEP 2 — Check for wrong signals. Are they showing signs of a DIFFERENT emotion instead?
+STEP 2 — Detect what emotion you actually see, and decide if it matches ${targetEmotionCode}.
 Wrong signals for ${targetEmotionCode}: ${rubric.wrongSignals}
+Set "matched" to true ONLY if the detected emotion genuinely matches ${targetEmotionCode}.
+Be strict — a neutral face or a different emotion must have matched: false.
 
 STEP 3 — Compute final score:
-- Average your cue scores → multiply by 10 → this is your base (0-100)
+- Average your cue scores → multiply by 10 → base score (0-100)
 - If strong wrong signals are present, subtract 15-25 points
 - If the expression is genuinely convincing and natural, add 5-10 bonus
-- Minimum final score is 25 (everyone tried)
-- Be HONEST and ACCURATE. A real smile for HASYA should score 65-80. An exceptional one 85-95. Neutral face = 25-35. Wrong emotion = 25-40.
+- Minimum final score is 25
 
-IMPORTANT — avoid the low-score bias:
-- If someone is clearly making the right face, score them 60-80 confidently
+IMPORTANT — accuracy rules:
+- If "matched" is false, your finalScore should reflect what you see — NOT the target emotion quality
+- If "matched" is true and expression is clearly visible, score 60-80 confidently
 - Reserve 25-40 ONLY for truly blank, wrong, or non-existent expressions
-- A person making a genuine attempt with visible facial movement deserves at least 45-55
+- A genuine attempt with visible movement deserves at least 45-55
 
 Respond ONLY with this exact JSON (no markdown, no extra text):
 {"cueScores":[7,8,6,7,5],"wrongSignals":false,"bonus":5,"finalScore":72,"detected":"HASYA","matched":true,"reason":"Wide genuine smile, raised cheeks, eyes squinting — convincing HASYA"}
 
 Rules:
 - "cueScores": array of ${rubric.cues.length} integers 0-10
-- "wrongSignals": true if they're clearly doing a different emotion
+- "wrongSignals": true if they are clearly doing a different emotion
 - "bonus": 0-10
 - "finalScore": 25-100
 - "detected": SHRINGARA/RAUDRA/HASYA/KARUNA/BHAYANAKA/BIBHATSA/SHANTA/VEERA/ADBHUTA/NEUTRAL
-- "matched": true if detected matches ${targetEmotionCode}`;
+- "matched": true ONLY if detected emotion genuinely matches ${targetEmotionCode}`;
 
   const response = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -378,7 +390,7 @@ Rules:
   const cleaned = rawText.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(cleaned);
 
-  // Blend AI finalScore (70%) with cue-computed score (30%) for accuracy
+  // Blend AI finalScore (70%) with cue-computed score (30%)
   let computedScore = parsed.finalScore;
   if (Array.isArray(parsed.cueScores) && parsed.cueScores.length > 0) {
     const avgCue = parsed.cueScores.reduce((a, b) => a + Number(b), 0) / parsed.cueScores.length;
@@ -403,8 +415,6 @@ export default function Challenge() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const deckRef = useRef([]);
-
-  // Track total attempts this session (persists across Try Another clicks)
   const attemptCountRef = useRef(0);
 
   const [phase, setPhase] = useState("idle");
@@ -487,7 +497,6 @@ export default function Challenge() {
     const imageData = captureFrame(v);
     const required = toCode(targetEmotion);
 
-    // Increment attempt counter BEFORE judging
     attemptCountRef.current += 1;
     const thisAttempt = attemptCountRef.current;
 
@@ -502,8 +511,8 @@ export default function Challenge() {
       const result = await judgeExpressionWithGroq(imageData, required);
       [t1, t2, t3].forEach(clearTimeout);
 
-      // Apply nudge for repeat users (attempt 4+)
-      const finalScore = applyAttemptNudge(thisAttempt, result.rawScore);
+      // Apply nudge — matched check is inside applyAttemptNudge
+      const finalScore = applyAttemptNudge(thisAttempt, result.rawScore, result.matched);
 
       stopStream();
       setJudging(false);
@@ -514,7 +523,6 @@ export default function Challenge() {
     } catch (err) {
       [t1, t2, t3].forEach(clearTimeout);
       setJudging(false);
-      // Roll back attempt count if the call failed (don't penalise errors)
       attemptCountRef.current -= 1;
       console.error("Groq error:", err);
 

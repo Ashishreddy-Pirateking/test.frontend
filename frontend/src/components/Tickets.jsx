@@ -187,27 +187,37 @@ export default function Tickets() {
       dataArrayRef.current = new Uint8Array(analyserRef.current.fftSize);
 
       const update = () => {
-        analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
-        let sum = 0;
-        for (let i = 0; i < dataArrayRef.current.length; i += 1) {
-          const val = (dataArrayRef.current[i] - 128) / 128;
-          sum += val * val;
-        }
-        const rms = Math.sqrt(sum / dataArrayRef.current.length);
-        let db = 20 * Math.log10(rms);
-        if (!Number.isFinite(db)) db = -100;
-        let loud = Math.round(((db + 60) / 55) * 100);
-        loud = Math.max(0, Math.min(100, loud));
-        setLoudness(loud);
+  analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
 
-        if (loud >= 80) {
-          setResult("✅ Peace ra!", "good");
-        } else if (loud > 5) {
-          setResult("❌ Gattiga, vinapadelaaa!!!!!", "bad");
-        }
+  // Compute raw RMS amplitude (0.0 to 1.0)
+  let sum = 0;
+  for (let i = 0; i < dataArrayRef.current.length; i += 1) {
+    const val = (dataArrayRef.current[i] - 128) / 128;
+    sum += val * val;
+  }
+  const rms = Math.sqrt(sum / dataArrayRef.current.length);
 
-        animationIdRef.current = requestAnimationFrame(update);
-      };
+  // Map RMS to 0-100 display scale using a curve that's honest:
+  // rms < 0.01 → near silence (0-5)
+  // rms ~0.05  → normal talking (30-40)
+  // rms ~0.10  → loud talking (55-65)
+  // rms ~0.18+ → real shout (85-100)
+  // Formula: power curve so soft sounds stay low, shouts register high
+  const SHOUT_THRESHOLD = 0.18; // RMS where max score is reached
+  const curved = Math.pow(rms / SHOUT_THRESHOLD, 1.8);
+  let loud = Math.round(Math.min(1, curved) * 100);
+  loud = Math.max(0, loud);
+
+  setLoudness(loud);
+
+  if (loud >= 85) {
+    setResult("✅ Peace ra!", "good");
+  } else if (loud > 8) {
+    setResult("❌ Gattiga, vinapadelaaa!!!!!", "bad");
+  }
+
+  animationIdRef.current = requestAnimationFrame(update);
+};
 
       update();
     } catch (err) {
