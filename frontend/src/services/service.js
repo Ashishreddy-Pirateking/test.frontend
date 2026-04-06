@@ -56,26 +56,38 @@ export const submitTicketBooking = (payload) =>
   });
 
 export const fetchPublicSiteContent = async () => {
-  let response;
-  try {
-    response = await fetch(`${API_BASE}/api/content/public`, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-  } catch {
-    throw createApiError(
-      `Cannot reach backend at ${API_BASE}. Ensure backend server is running.`,
-      0
-    );
-  }
+  const maxAttempts = 3;
 
-  const data = await parseApiResponse(response);
-  if (!response.ok) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    let response;
+    try {
+      response = await fetch(`${API_BASE}/api/content/public`, {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+    } catch {
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        continue;
+      }
+      throw createApiError(
+        `Cannot reach backend at ${API_BASE}. Ensure backend server is running.`,
+        0
+      );
+    }
+
+    const data = await parseApiResponse(response);
+    if (response.ok) return data;
+
+    if (attempt < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      continue;
+    }
+
     throw createApiError(data?.message || "Request failed.", response.status);
   }
-  return data;
 };
 
 export const refreshPublicSiteSnapshot = () => fetchPublicSiteContent();
