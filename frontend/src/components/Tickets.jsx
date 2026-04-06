@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CAPTCHA_EMOJIS } from "../data/legacyData";
-import { submitTicketBooking } from "../services/service";
+
+const TICKET_WEBHOOK_URL =
+  "https://script.google.com/macros/s/AKfycby-RVV8ZvDlRq_bAB92QTgNfKPEaeZ8UMZOG-BVVfZD40LyL7l4YRDgK4oetQ07IQDjgg/exec";
 
 const getRandomEmojis = (target) => {
   const distractors = CAPTCHA_EMOJIS.filter((e) => e.name !== target.name)
@@ -134,14 +136,33 @@ export default function Tickets() {
 
     setSubmitting(true);
     try {
-      const response = await submitTicketBooking({
-        name,
-        email,
-        message,
-        pageUrl: window.location.href,
+      const response = await fetch(TICKET_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim(),
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error("Could not submit your booking right now. Please try again.");
+      }
+
+      let successMessage = "Your booking request has been received.";
+      const responseText = await response.text();
+      if (responseText) {
+        try {
+          const data = JSON.parse(responseText);
+          successMessage = data?.message || successMessage;
+        } catch {
+          successMessage = responseText || successMessage;
+        }
+      }
+
       setTicketBooked(true);
-      setSubmitMessage(response?.message || "Your booking request has been received.");
+      setSubmitMessage(successMessage);
     } catch (error) {
       setSubmitError(error?.message || "Could not submit your booking right now. Please try again.");
     } finally {
