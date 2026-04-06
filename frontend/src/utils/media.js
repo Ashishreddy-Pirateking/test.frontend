@@ -5,6 +5,8 @@ import volliImg from "../Legacy/Volli.jpeg";
 import monishImg from "../Legacy/Monish .jpeg";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/+$/, "");
+const LOCALHOST_BACKEND_ORIGIN = "http://localhost:5000";
+const LIVE_BACKEND_ORIGIN = "https://prasthanam-backend.onrender.com";
 
 const LOCAL_MEDIA = {
   logo: logoImg,
@@ -38,6 +40,23 @@ const LOCAL_MEDIA_NORMALIZED = Object.entries(LOCAL_MEDIA).reduce((acc, [key, me
   return acc;
 }, {});
 
+export const normalizeImageUrl = (value) => {
+  const ref = String(value || "").trim();
+  if (!ref) return "";
+  if (ref.startsWith(LOCALHOST_BACKEND_ORIGIN)) {
+    return `${LIVE_BACKEND_ORIGIN}${ref.slice(LOCALHOST_BACKEND_ORIGIN.length)}`;
+  }
+  if (ref.startsWith("http://")) {
+    return `https://${ref.slice("http://".length)}`;
+  }
+  return ref;
+};
+
+export const toBackgroundImage = (value) => {
+  const resolved = resolveMediaUrl(value);
+  return resolved ? `url("${resolved}")` : "none";
+};
+
 export const resolveMediaUrl = (value) => {
   const ref = String(value || "").trim();
   if (!ref) return "";
@@ -54,13 +73,13 @@ export const resolveMediaUrl = (value) => {
     LOCAL_MEDIA_NORMALIZED[normalizedRefBase] ||
     LOCAL_MEDIA_NORMALIZED[normalizedDecodedRefBase];
   if (localMedia) return localMedia;
-  if (ref.startsWith("http://") || ref.startsWith("https://")) return ref;
-  if (ref.startsWith("uploads/")) return `${API_BASE}/${ref}`;
-  if (ref.startsWith("/uploads/")) return `${API_BASE}${ref}`;
+  if (ref.startsWith("http://") || ref.startsWith("https://")) return normalizeImageUrl(ref);
+  if (ref.startsWith("uploads/")) return normalizeImageUrl(`${API_BASE}/${ref}`);
+  if (ref.startsWith("/uploads/")) return normalizeImageUrl(`${API_BASE}${ref}`);
   if (/^[^/]+\.(png|jpe?g|webp|gif|svg|mp4|m4a)$/i.test(decodedRef)) {
-    return `${API_BASE}/uploads/${decodedRef}`;
+    return normalizeImageUrl(`${API_BASE}/uploads/${decodedRef}`);
   }
-  return decodedRef;
+  return normalizeImageUrl(decodedRef);
 };
 
 export const getApiBase = () => API_BASE;
