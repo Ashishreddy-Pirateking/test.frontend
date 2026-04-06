@@ -53,6 +53,10 @@ export default function Team() {
             GOVERNORS.find(
               (item) => String(item.name || "").replace(/\s+/g, "").toLowerCase() === normalizedGovernorName
             ) || GOVERNORS[index];
+          const funFact =
+            normalizedGovernorName === "manishrasamalla"
+              ? "Farms Aura as part-time"
+              : (g.funFact || fallbackGovernor?.funFact || "-");
           const imageSrc = resolveMediaUrl(g.img || fallbackGovernor?.img || "logo");
           const zodiacSymbol = resolveZodiacSymbol(g.zodiacSign);
           const showZodiac = Boolean(zodiacSymbol);
@@ -97,7 +101,7 @@ export default function Team() {
                   <div className="w-full bg-black/30 p-2 md:p-4 rounded text-base text-gray-200 space-y-3" style={{ fontFamily: "'Jua', sans-serif" }}>
                     <p>
                       <span className="text-[#FFD700] font-bold text-sm uppercase mr-1">Fun Fact:</span>
-                      {g.funFact || "-"}
+                      {funFact}
                     </p>
                     <p>
                       <span className="text-[#FFD700] font-bold text-sm uppercase mr-1">Department:</span>

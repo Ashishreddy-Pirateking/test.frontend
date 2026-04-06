@@ -126,7 +126,7 @@ export const GOVERNORS = [
     name: "Manish Rasamalla",
     role: "The Stage Master",
     quote: "Ni bondha ra Ni bondha....",
-    funFact: "Goes library only fr Renu shree",
+    funFact: "Farms Aura as part-time",
     department: "",
     contactInfo: "",
     zodiacSign: "",
