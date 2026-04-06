@@ -5,7 +5,7 @@ export const NAVARASAS = [
     subtitle: "Love / Beauty",
     glowColor: "#a855f7",
     textColor: "text-purple-400",
-    plays: ["Iddaru", "Nenu Naa Rakshasi", "Sakuntalam"],
+    plays: ["Nenu Naa Raakshasi", "Ahana Pellanta", "Evaru ee sundari"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
   },
@@ -15,7 +15,7 @@ export const NAVARASAS = [
     subtitle: "Laughter",
     glowColor: "#eab308",
     textColor: "text-yellow-400",
-    plays: ["Aahana Pellanta", "Jathi Ratnalu", "Pellam Oorelithe"],
+    plays: ["Chitram Balare Vichitram", "Ekkadiki Poyav Chinnavaada", "Anukoni Adrustam"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
   },
@@ -25,7 +25,7 @@ export const NAVARASAS = [
     subtitle: "Sorrow",
     glowColor: "#6b7280",
     textColor: "text-gray-400",
-    plays: ["Matru Devo Bhava", "Mithunam", "Swathi Muthyam"],
+    plays: ["Mithunam", "Devadasu", "Adrushyam"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" opacity="0.5"/><path d="M12 22s-2-4-2-8a2 2 0 1 1 4 0c0 4-2 8-2 8z"/></svg>',
   },
@@ -35,7 +35,7 @@ export const NAVARASAS = [
     subtitle: "Anger",
     glowColor: "#dc2626",
     textColor: "text-red-500",
-    plays: ["Karna Bharam", "Raktha Charitra", "Sangarshana"],
+    plays: ["Karna Bharam", "D-day", "Antharangam"],
     icon:
       '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-angry-icon lucide-angry"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><path d="M7.5 8 10 9"/><path d="m14 9 2.5-1"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>',
   },
@@ -45,7 +45,7 @@ export const NAVARASAS = [
     subtitle: "Heroism",
     glowColor: "#f97316",
     textColor: "text-orange-500",
-    plays: ["Bahubali", "Magadheera", "Simha"],
+    plays: ["Sangarshana", "Prathinayakudu", "Kaala Bharani"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3a7 7 0 0 0 5 5.8 2.4 2.4 0 0 0-2.1-2z"/></svg>',
   },
@@ -55,7 +55,7 @@ export const NAVARASAS = [
     subtitle: "Terror / Fear",
     glowColor: "#115e59",
     textColor: "text-teal-500",
-    plays: ["Ratirasyam", "Cheekati Rajyam", "Bhoot"],
+    plays: ["Flashback", "Mission 276", "Crime and Punishment"],
     icon:
       '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skull-icon lucide-skull"><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/></svg>',
   },
@@ -65,7 +65,7 @@ export const NAVARASAS = [
     subtitle: "Disgust",
     glowColor: "#2563eb",
     textColor: "text-blue-500",
-    plays: ["Arundhati", "Deyyam", "Tumbbad (Adaptation)"],
+    plays: ["Plan B", "Oo petra katha", "Karta Karma Kriya"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 10h.01"/><path d="M15 10h.01"/><circle cx="12" cy="12" r="10"/><path d="M12 2a8 8 0 0 0-.5 15.98"/><path d="M16 14c-1.5 1-4.5 1-4.5 1s-1.5 0-3.5-1"/></svg>',
   },
@@ -75,7 +75,7 @@ export const NAVARASAS = [
     subtitle: "Wonder",
     glowColor: "#d97706",
     textColor: "text-amber-500",
-    plays: ["Mayabazar", "Aditya 369", "Jagadeka Veerudu"],
+    plays: ["Chitram Bhalare Vichitram", "Production No.1", "Nenu Na Rakshasi"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.28 1.28L3 12l5.8 1.9a2 2 0 0 1 1.28 1.28L12 21l1.9-5.8a2 2 0 0 1 1.28-1.28L21 12l-5.8-1.9a2 2 0 0 1-1.28-1.28Z"/></svg>',
   },
@@ -85,7 +85,7 @@ export const NAVARASAS = [
     subtitle: "Peace",
     glowColor: "#A5F3FC",
     textColor: "text-cyan-200",
-    plays: ["Annamayya", "Gautama Buddha", "Ramadasu"],
+    plays: ["Tara", "Kannuna Kalyanam Emainadhi", "Welcome Baama"],
     icon:
       '<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   },

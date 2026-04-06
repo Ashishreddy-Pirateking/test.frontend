@@ -40,7 +40,11 @@ export default function Navarasas() {
     return live.map((item) => ({
       ...(fallbackById[item.id] || {}),
       ...item,
-      plays: Array.isArray(item.plays) ? item.plays : [],
+      plays: Array.isArray(fallbackById[item.id]?.plays)
+        ? fallbackById[item.id].plays
+        : Array.isArray(item.plays)
+          ? item.plays
+          : [],
     }));
   }, [siteContent]);
 
