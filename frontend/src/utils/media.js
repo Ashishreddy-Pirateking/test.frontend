@@ -58,9 +58,18 @@ export const toBackgroundImage = (value) => {
 };
 
 export const resolveMediaUrl = (value) => {
-  const ref = String(value || "").trim();
+  if (typeof value !== "string") return "";
+
+  const ref = value.trim();
   if (!ref) return "";
-  const decodedRef = decodeURIComponent(ref);
+  let decodedRef = ref;
+  try {
+    decodedRef = decodeURIComponent(ref);
+  } catch {
+    decodedRef = ref;
+  }
+  if (ref === "[object Object]" || decodedRef === "[object Object]") return "";
+
   const normalizedRef = normalizeMediaKey(ref);
   const normalizedDecodedRef = normalizeMediaKey(decodedRef);
   const normalizedRefBase = normalizedRef.replace(/\.[^.]+$/, "");
@@ -73,13 +82,21 @@ export const resolveMediaUrl = (value) => {
     LOCAL_MEDIA_NORMALIZED[normalizedRefBase] ||
     LOCAL_MEDIA_NORMALIZED[normalizedDecodedRefBase];
   if (localMedia) return localMedia;
-  if (ref.startsWith("http://") || ref.startsWith("https://")) return normalizeImageUrl(ref);
-  if (ref.startsWith("uploads/")) return normalizeImageUrl(`${API_BASE}/${ref}`);
-  if (ref.startsWith("/uploads/")) return normalizeImageUrl(`${API_BASE}${ref}`);
+
+  if (ref.startsWith("http://") || ref.startsWith("https://")) {
+    return normalizeImageUrl(ref);
+  }
+  if (decodedRef.startsWith("http://") || decodedRef.startsWith("https://")) {
+    return normalizeImageUrl(decodedRef);
+  }
+
+  if (decodedRef.startsWith("uploads/")) return normalizeImageUrl(`${API_BASE}/${decodedRef}`);
+  if (decodedRef.startsWith("/uploads/")) return normalizeImageUrl(`${API_BASE}${decodedRef}`);
   if (/^[^/]+\.(png|jpe?g|webp|gif|svg|mp4|m4a)$/i.test(decodedRef)) {
     return normalizeImageUrl(`${API_BASE}/uploads/${decodedRef}`);
   }
-  return normalizeImageUrl(decodedRef);
+
+  return "";
 };
 
 export const getApiBase = () => API_BASE;

@@ -5,7 +5,13 @@ export default function LatestEventPoster() {
   const { siteContent } = useSiteContent();
   const latestEvent = siteContent?.latestEvent || {};
   const title = String(latestEvent.title || "Latest Production");
-  const posterSrc = resolveMediaUrl(latestEvent.poster || "logo");
+  const rawPoster = latestEvent?.poster;
+  console.log("LatestEventPoster poster:", rawPoster);
+  const posterValue =
+    typeof rawPoster === "string"
+      ? rawPoster
+      : rawPoster?.url || rawPoster?.fileUrl || "";
+  const posterSrc = resolveMediaUrl(posterValue || "logo");
   const date = String(latestEvent.date || "TBA");
   const time = String(latestEvent.time || "TBA");
   const venue = String(latestEvent.venue || "Venue TBA");
