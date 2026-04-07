@@ -4,7 +4,11 @@ export default function CursorSpotlight() {
   const cursRef = useRef(null);
   const spotRef = useRef(null);
 
+  // Touch devices have no cursor — skip all listener setup and render nothing
+  const isTouchDevice = window.matchMedia("(hover: none)").matches;
+
   useEffect(() => {
+    if (isTouchDevice) return;
     const handleMove = (event) => {
       const x = event.clientX;
       const y = event.clientY;
@@ -44,6 +48,8 @@ export default function CursorSpotlight() {
       window.removeEventListener("focus", handleFocus);
     };
   }, []);
+
+  if (isTouchDevice) return null;
 
   return (
     <>

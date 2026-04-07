@@ -49,6 +49,7 @@ export default function Navarasas() {
   }, [siteContent]);
 
   const [activeRasaId, setActiveRasaId] = useState(() => String(rasaList[0]?.id || NAVARASAS[0]?.id || ""));
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (!rasaList.some((rasa) => String(rasa.id) === String(activeRasaId))) {
@@ -95,7 +96,54 @@ export default function Navarasas() {
             <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
           </div>
         </div>
-        <div id="filterButtons" className="flex flex-row md:flex-wrap overflow-x-auto md:overflow-x-visible items-center md:justify-center gap-3 md:gap-4 mb-10 md:mb-16 px-4 pb-4 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: 'x mandatory' }}>
+        {/* Mobile Dropdown Selection */}
+        <div className="md:hidden flex flex-col items-center justify-center w-full max-w-[300px] mx-auto mb-10 px-4 relative z-50">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full flex items-center justify-between bg-black/60 border text-white font-bold py-3 px-6 rounded-full font-['Cinzel'] tracking-[0.15em] outline-none backdrop-blur-md shadow-lg transition-all duration-300"
+            style={{
+              boxShadow: `0 0 15px ${currentRasa.glowColor}`,
+              borderColor: currentRasa.glowColor,
+            }}
+          >
+            <span className="flex-1 text-center uppercase">{String(currentRasa.name || "").toUpperCase()}</span>
+            <svg 
+              className={`fill-current h-5 w-5 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+              style={{ color: currentRasa.glowColor }} 
+              xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+            >
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+            </svg>
+          </button>
+          
+          {/* Custom Dropdown Table */}
+          <div 
+            className={`absolute top-full left-4 right-4 mt-3 bg-black/90 backdrop-blur-xl border rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 transform origin-top ${isDropdownOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}
+            style={{ borderColor: currentRasa.glowColor, boxShadow: `0 10px 30px ${currentRasa.glowColor}40` }}
+          >
+            <ul 
+              className="max-h-[300px] overflow-y-auto navarasa-mobile-scroll"
+              style={{ "--navarasa-scrollbar-color": currentRasa.glowColor }}
+            >
+              {rasaList.map((rasa) => (
+                <li key={rasa.id}>
+                  <button
+                    onClick={() => {
+                      setActiveRasaId(String(rasa.id));
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`w-full text-center py-4 px-6 font-['Cinzel'] tracking-[0.15em] transition-colors ${activeRasaId === String(rasa.id) ? 'bg-white/10 font-bold text-lg' : 'hover:bg-white/5'} text-white uppercase border-b border-white/5 last:border-0`}
+                    style={activeRasaId === String(rasa.id) ? { color: rasa.glowColor } : {}}
+                  >
+                    {String(rasa.name || "").toUpperCase()}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div id="filterButtons" className="hidden md:flex flex-row md:flex-wrap overflow-x-auto md:overflow-x-visible items-center md:justify-center gap-3 md:gap-4 mb-10 md:mb-16 px-4 pb-4 md:pb-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" style={{ scrollSnapType: 'x mandatory' }}>
           {rasaList.map((rasa) => {
             const isActive = rasa.id === currentRasa.id;
             const className = [
@@ -130,7 +178,7 @@ export default function Navarasas() {
               />
             </div>
             <div className={`border-t-2 border-${currentRasa.textColor.split("-")[1]}-500 w-24 my-6 opacity-50`} />
-            <h3 
+            <h3
               className="text-5xl md:text-7xl text-white drop-shadow-lg tracking-wide transition-all duration-500"
               style={{ fontFamily: TELUGU_RASA_FONTS[currentRasa.id] || "'Sirivennela', sans-serif" }}
             >

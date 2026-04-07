@@ -1,3 +1,19 @@
+/* ─── Mobile resets ─────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -17,7 +33,12 @@ a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
+  min-height: 44px;
+  /* Apple HIG minimum touch target */
+  display: inline-flex;
+  align-items: center;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -28,6 +49,10 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
+  /* prevent horizontal scroll */
+  -webkit-tap-highlight-color: transparent;
+  /* remove grey flash on Android */
 }
 
 h1 {
@@ -45,10 +70,14 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  min-height: 44px;
+  /* Apple HIG minimum touch target */
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -59,10 +88,14 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
 }
+
+@import "./responsive-utils.css";

@@ -31,13 +31,10 @@ const resolveZodiacSymbol = (value) => {
 export default function Team() {
   const { siteContent } = useSiteContent();
   const governors = siteContent?.governors?.length ? siteContent.governors : GOVERNORS;
-  const [flippedCards, setFlippedCards] = useState({});
+  const [flippedCardIndex, setFlippedCardIndex] = useState(null);
 
   const toggleFlip = (index) => {
-    setFlippedCards(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
+    setFlippedCardIndex(prev => prev === index ? null : index);
   };
 
   return (
@@ -62,16 +59,16 @@ export default function Team() {
           const showZodiac = Boolean(zodiacSymbol);
           const department = String(g.department || "").trim();
           const contactInfo = String(g.contactInfo || "").trim();
-          
+
           const quoteText = g.quote || "No quote added";
           let quoteSizeClass = "text-[22px] md:text-[26px]";
           if (quoteText.length > 30) quoteSizeClass = "text-[18px] md:text-[20px]";
           else if (quoteText.length > 22) quoteSizeClass = "text-[20px] md:text-[22px]";
 
           return (
-            <div 
-              key={`${g.name}-${index}`} 
-              className={`group relative card-3d h-[400px] cursor-pointer ${flippedCards[index] ? 'is-flipped' : ''}`}
+            <div
+              key={`${g.name}-${index}`}
+              className={`group relative card-3d w-[85%] md:w-full mx-auto aspect-[5/7] cursor-pointer ${flippedCardIndex === index ? 'is-flipped' : ''}`}
               onClick={() => toggleFlip(index)}
             >
               <div className="relative w-full h-full card-inner preserve-3d">
@@ -122,19 +119,19 @@ export default function Team() {
       <a
         href="/cast"
         role="button"
-        className="group relative mt-16 block w-full max-w-4xl mx-auto rounded-full border border-[#FFD700]/60 bg-gradient-to-r from-[#1a0b00] via-black to-[#332000] py-6 md:py-7 text-center shadow-[0_0_45px_rgba(255,215,0,0.25)] transition-all duration-300 hover:shadow-[0_0_70px_rgba(255,215,0,0.45)] hover:-translate-y-1 hover:border-[#FFD700] overflow-hidden"
+        className="group relative mt-16 block w-full max-w-[500px] mx-auto rounded-full border border-[#FFD700]/60 bg-gradient-to-r from-[#1a0b00] via-black to-[#332000] py-4 text-center shadow-[0_0_30px_rgba(255,215,0,0.15)] transition-all duration-300 hover:shadow-[0_0_45px_rgba(255,215,0,0.30)] hover:-translate-y-1 hover:border-[#FFD700] overflow-hidden"
       >
         <div className="pointer-events-none absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-300">
           <div className="absolute -inset-x-40 -bottom-32 h-52 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.65),transparent_60%)] blur-3xl" />
         </div>
-        <div className="relative flex items-center justify-center gap-3 md:gap-4">
-          <span className="font-cinzel text-base md:text-lg tracking-[0.35em] text-[#fef3c7] uppercase">
+        <div className="relative flex items-center justify-center gap-3">
+          <span className="font-cinzel text-xs md:text-sm tracking-[0.35em] text-[#fef3c7] uppercase">
             Meet the
           </span>
-          <span className="font-cinzel text-3xl md:text-4xl tracking-[0.25em] uppercase text-[#FFD700]">
+          <span className="font-cinzel text-xl md:text-2xl tracking-[0.25em] uppercase text-[#FFD700]">
             Cast
           </span>
-          <span className="inline-flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border border-[#FFD700]/70 bg-black/60 text-[#FFD700] text-xl md:text-2xl shadow-[0_0_18px_rgba(255,215,0,0.55)] group-hover:translate-x-1 group-hover:scale-110 transition-transform duration-300">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#FFD700]/70 bg-black/60 text-[#FFD700] text-lg shadow-[0_0_12px_rgba(255,215,0,0.35)] group-hover:translate-x-1 group-hover:scale-110 transition-transform duration-300">
             →
           </span>
         </div>

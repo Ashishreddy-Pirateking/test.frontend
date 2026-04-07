@@ -1,3 +1,4 @@
+/* ── Vite default styles (kept as-is) ──────────────────────────────────── */
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -11,9 +12,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +25,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -39,4 +43,29 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* ── Phase 5 Step 17: iOS safe area insets ──────────────────────────────
+   env() variables are set by the browser on notch / Dynamic Island devices
+   (iPhone X and later). They are zero on all other devices, so these rules
+   are completely safe to ship unconditionally.
+   Requires viewport-fit=cover in the <meta name="viewport"> tag (Step 16).
+──────────────────────────────────────────────────────────────────────── */
+
+/* Navbar — push down past the notch / Dynamic Island */
+.navbar {
+  padding-top: max(1rem, env(safe-area-inset-top));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Footer — lift up past the home indicator bar */
+.footer {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+/* Full-screen hamburger drawer — needs both top and bottom insets */
+.nav-links {
+  padding-top: max(2rem, env(safe-area-inset-top));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
 }
