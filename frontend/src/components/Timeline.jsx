@@ -47,10 +47,9 @@ export default function Timeline() {
       const prefersReducedMotion =
         typeof window.matchMedia === "function" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const isDesktop = window.innerWidth >= DESKTOP_PIN_BREAKPOINT;
       const maxTranslate = Math.max(0, track.scrollWidth - container.clientWidth);
 
-      if (!isDesktop || prefersReducedMotion || maxTranslate < 24) {
+      if (prefersReducedMotion || maxTranslate < 24) {
         setPinMetrics((prev) =>
           prev.enabled || prev.maxTranslate || prev.sectionHeight
             ? { enabled: false, maxTranslate: 0, sectionHeight: 0 }
@@ -241,9 +240,8 @@ export default function Timeline() {
       id="about"
       ref={sectionRef}
       style={sectionStyle}
-      className={`timeline-scroll-section pt-10 pb-16 px-6 max-w-6xl mx-auto ${
-        pinMetrics.enabled ? "is-pinned-mode" : ""
-      }`}
+      className={`timeline-scroll-section pt-10 pb-16 px-6 max-w-6xl mx-auto ${pinMetrics.enabled ? "is-pinned-mode" : ""
+        }`}
     >
       <div className="timeline-sticky-shell">
         <div className="text-center group relative min-h-[50px] md:h-[60px] flex flex-col items-center justify-center cursor-none mb-12">

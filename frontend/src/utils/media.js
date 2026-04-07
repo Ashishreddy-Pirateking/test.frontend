@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import logoImg from "../Legacy/logo.png";
 import meImg from "../Legacy/Me .jpeg";
 import bikashImg from "../Legacy/Bikash.jpeg";
@@ -101,3 +102,22 @@ export const resolveMediaUrl = (value) => {
 
 export const getApiBase = () => API_BASE;
 
+// ─── Breakpoints ──────────────────────────────────────────────────────────────
+export const BP = { sm: 480, md: 768, lg: 1024, xl: 1280 };
+
+export const mq = (bp) => `@media (max-width: ${BP[bp]}px)`;
+
+// ─── useIsMobile hook ─────────────────────────────────────────────────────────
+export function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth <= BP.md);
+
+  useEffect(() => {
+    const handler = () => setMobile(window.innerWidth <= BP.md);
+    const mql = window.matchMedia(`(max-width: ${BP.md}px)`);
+    // Use matchMedia listener for better performance (no resize spam)
+    mql.addEventListener("change", (e) => setMobile(e.matches));
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  return mobile;
+}
