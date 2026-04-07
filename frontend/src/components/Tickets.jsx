@@ -325,11 +325,6 @@ export default function Tickets() {
           Ticket Counter
         </h2>
 
-        {/* Tilt hint – only visible on touch devices */}
-        <p className="md:hidden text-center text-[#e2c4a4] text-xs font-mono uppercase tracking-widest mb-4 opacity-60">
-          Tilt phone to move ticket
-        </p>
-
         {/* ── Ticket Card ────────────────────────────────────────────────── */}
         {/*
           Mobile layout:  stub on top, body below (flex-col)
