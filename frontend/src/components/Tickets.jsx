@@ -136,8 +136,9 @@ export default function Tickets() {
 
     setSubmitting(true);
     try {
-      const response = await fetch(TICKET_WEBHOOK_URL, {
+      await fetch(TICKET_WEBHOOK_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
@@ -146,23 +147,8 @@ export default function Tickets() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Could not submit your booking right now. Please try again.");
-      }
-
-      let successMessage = "Your booking request has been received.";
-      const responseText = await response.text();
-      if (responseText) {
-        try {
-          const data = JSON.parse(responseText);
-          successMessage = data?.message || successMessage;
-        } catch {
-          successMessage = responseText || successMessage;
-        }
-      }
-
       setTicketBooked(true);
-      setSubmitMessage(successMessage);
+      setSubmitMessage("Your booking request has been received.");
     } catch (error) {
       setSubmitError(error?.message || "Could not submit your booking right now. Please try again.");
     } finally {
