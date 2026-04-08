@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import backgroundVideo from "../Legacy/background.mp4";
+import { LOCAL_GALLERY_IMAGES } from "../data/localGalleryImages";
 import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
 
@@ -31,12 +32,14 @@ export default function Gallery() {
     }
   }, []);
 
-  const imagePool = useMemo(() => {
+  const siteGalleryImages = useMemo(() => {
     const refs = siteContent?.gallery?.images || [];
-    const resolved = refs.map((ref) => resolveMediaUrl(ref)).filter(Boolean);
-    return resolved.length ? resolved : ["logo", "me", "bikash", "volli", "monish"].map(resolveMediaUrl);
+    return refs.map((ref) => resolveMediaUrl(ref)).filter(Boolean);
   }, [siteContent]);
-  const imagePoolSignature = useMemo(() => JSON.stringify(imagePool), [imagePool]);
+  const imagePool = useMemo(
+    () => (LOCAL_GALLERY_IMAGES.length ? LOCAL_GALLERY_IMAGES : siteGalleryImages),
+    [siteGalleryImages]
+  );
 
   useEffect(() => {
     document.body.classList.add("gallery-page");
@@ -45,7 +48,9 @@ export default function Gallery() {
 
   useEffect(() => {
     if (!mountRef.current) return;
-    setIsGalleryReady(false);
+    const resetReadyTimer = window.setTimeout(() => {
+      setIsGalleryReady(false);
+    }, 0);
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x000000, 120, 320);
@@ -139,8 +144,7 @@ export default function Gallery() {
       texture.anisotropy = maxAnisotropy;
     };
 
-    const fallbackSources = ["logo", "me", "bikash", "volli", "monish"].map(resolveMediaUrl).filter(Boolean);
-    const fallbackPool = fallbackSources.length ? fallbackSources : imagePool;
+    const fallbackPool = imagePool;
     const fallbackTextures = fallbackPool.map((src) => {
       const tex = textureLoader.load(src, applyTextureOptions);
       applyTextureOptions(tex);
@@ -332,6 +336,7 @@ export default function Gallery() {
     window.addEventListener("resize", onResize);
 
     return () => {
+      window.clearTimeout(resetReadyTimer);
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("click", onClick);
@@ -356,7 +361,7 @@ export default function Gallery() {
       bgVideo.pause();
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
     };
-  }, [imagePoolSignature]);
+  }, [imagePool]);
 
   return (
     <div className="gallery-page-root">
