@@ -6,6 +6,8 @@ import { LOCAL_GALLERY_IMAGES } from "../data/localGalleryImages";
 import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
 
+const SCENE_GALLERY_LIMIT = 12;
+
 export default function Gallery() {
   const mountRef = useRef(null);
   const [modalSrc, setModalSrc] = useState(null);
@@ -41,7 +43,7 @@ export default function Gallery() {
     [siteGalleryImages]
   );
   const sceneGalleryImages = useMemo(
-    () => allGalleryImages.slice(0, Math.min(allGalleryImages.length, 24)),
+    () => allGalleryImages.slice(0, Math.min(allGalleryImages.length, SCENE_GALLERY_LIMIT)),
     [allGalleryImages]
   );
 
@@ -485,7 +487,7 @@ export default function Gallery() {
                   onClick={() => setModalSrc(src)}
                 >
                   <span className="gallery-sprocket top" aria-hidden="true" />
-                  <img src={src} alt={`Gallery ${index + 1}`} />
+                  <img src={src} alt={`Gallery ${index + 1}`} loading="lazy" decoding="async" />
                   <div className="gallery-all-caption">
                     <span className="gallery-all-index">Frame #{index + 1}</span>
                   </div>
