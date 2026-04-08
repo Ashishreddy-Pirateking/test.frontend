@@ -5,32 +5,209 @@ import { CAST_BATCHES } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
 
+const cleanString = (value) => String(value || "").trim();
+
+const toUniqueStrings = (items) => {
+  const seen = new Set();
+  return (Array.isArray(items) ? items : [])
+    .map((item) => cleanString(item))
+    .filter((item) => {
+      if (!item || seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    });
+};
+
+const normalizeBatchId = (value) => cleanString(value);
+
+const tokenizeName = (value) =>
+  cleanString(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter(Boolean);
+
+const compactName = (value) =>
+  cleanString(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+const getEditDistance = (first, second) => {
+  const rows = first.length + 1;
+  const cols = second.length + 1;
+  const matrix = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+  for (let row = 0; row < rows; row += 1) matrix[row][0] = row;
+  for (let col = 0; col < cols; col += 1) matrix[0][col] = col;
+
+  for (let row = 1; row < rows; row += 1) {
+    for (let col = 1; col < cols; col += 1) {
+      const cost = first[row - 1] === second[col - 1] ? 0 : 1;
+      matrix[row][col] = Math.min(
+        matrix[row - 1][col] + 1,
+        matrix[row][col - 1] + 1,
+        matrix[row - 1][col - 1] + cost
+      );
+    }
+  }
+
+  return matrix[first.length][second.length];
+};
+
+const tokensLooselyMatch = (firstToken, secondToken) => {
+  if (!firstToken || !secondToken) return false;
+  if (firstToken === secondToken) return true;
+  if (firstToken.length >= 4 && secondToken.length >= 4) {
+    if (firstToken.includes(secondToken) || secondToken.includes(firstToken)) return true;
+  }
+  if (firstToken.length >= 3 && secondToken.length >= 3) {
+    if (firstToken.startsWith(secondToken) || secondToken.startsWith(firstToken)) return true;
+  }
+  const distance = getEditDistance(firstToken, secondToken);
+  if (Math.max(firstToken.length, secondToken.length) >= 6) return distance <= 2;
+  return distance <= 1;
+};
+
+const tokenSetsLooselyMatch = (firstTokens, secondTokens) => {
+  const [smaller, larger] =
+    firstTokens.length <= secondTokens.length
+      ? [firstTokens, secondTokens]
+      : [secondTokens, firstTokens];
+  const usedIndexes = new Set();
+
+  return smaller.every((token) => {
+    const matchIndex = larger.findIndex(
+      (candidate, index) => !usedIndexes.has(index) && tokensLooselyMatch(token, candidate)
+    );
+    if (matchIndex < 0) return false;
+    usedIndexes.add(matchIndex);
+    return true;
+  });
+};
+
+const namesMatch = (first, second) => {
+  const firstTokens = tokenizeName(first);
+  const secondTokens = tokenizeName(second);
+  if (!firstTokens.length || !secondTokens.length) return false;
+
+  const firstCompact = compactName(first);
+  const secondCompact = compactName(second);
+  if (!firstCompact || !secondCompact) return false;
+  if (firstCompact === secondCompact) return true;
+  if (firstCompact.includes(secondCompact) || secondCompact.includes(firstCompact)) return true;
+  if (
+    firstCompact[0] === secondCompact[0] &&
+    firstCompact[firstCompact.length - 1] === secondCompact[secondCompact.length - 1] &&
+    getEditDistance(firstCompact, secondCompact) <= 2
+  ) {
+    return true;
+  }
+
+  const [smaller, larger] =
+    firstTokens.length <= secondTokens.length
+      ? [firstTokens, secondTokens]
+      : [secondTokens, firstTokens];
+
+  const largerSet = new Set(larger);
+  if (smaller.every((token) => largerSet.has(token))) return true;
+  if (
+    firstTokens.length >= 2 &&
+    secondTokens.length >= 2 &&
+    firstTokens.slice(-2).join(" ") === secondTokens.slice(-2).join(" ")
+  ) {
+    return true;
+  }
+
+  return tokenSetsLooselyMatch(firstTokens, secondTokens);
+};
+
+const mergeCastBatches = (incomingBatches, fallbackBatches) => {
+  const normalizedIncoming = Array.isArray(incomingBatches) ? incomingBatches.filter(Boolean) : [];
+  const incomingMap = new Map(
+    normalizedIncoming
+      .map((batch) => [normalizeBatchId(batch?.id), batch])
+      .filter(([id]) => id)
+  );
+  const fallbackIds = new Set();
+
+  const mergedFallbackBatches = fallbackBatches.map((fallbackBatch) => {
+    const batchId = normalizeBatchId(fallbackBatch.id);
+    const incomingBatch = incomingMap.get(batchId);
+    const fallbackMembers = toUniqueStrings(fallbackBatch.members);
+    const incomingMembers = toUniqueStrings(incomingBatch?.members);
+    const incomingGovernorNames = toUniqueStrings(incomingBatch?.governorNames);
+    const useIncomingBatch = incomingMembers.length >= fallbackMembers.length && incomingMembers.length > 0;
+
+    fallbackIds.add(batchId);
+
+    return {
+      ...fallbackBatch,
+      ...(useIncomingBatch ? incomingBatch : {}),
+      id: batchId,
+      label:
+        useIncomingBatch && cleanString(incomingBatch?.label)
+          ? cleanString(incomingBatch.label)
+          : fallbackBatch.label,
+      yearRange:
+        useIncomingBatch && cleanString(incomingBatch?.yearRange)
+          ? cleanString(incomingBatch.yearRange)
+          : fallbackBatch.yearRange,
+      members: useIncomingBatch ? incomingMembers : fallbackMembers,
+      governorNames: incomingGovernorNames.length
+        ? incomingGovernorNames
+        : toUniqueStrings(fallbackBatch.governorNames),
+      photos: useIncomingBatch ? toUniqueStrings(incomingBatch?.photos) : toUniqueStrings(fallbackBatch.photos),
+    };
+  });
+
+  const extraIncomingBatches = normalizedIncoming
+    .filter((batch) => !fallbackIds.has(normalizeBatchId(batch?.id)))
+    .map((batch) => {
+      const batchId = normalizeBatchId(batch?.id);
+      return {
+        ...batch,
+        id: batchId,
+        label: cleanString(batch?.label) || `Batch of ${batchId}`,
+        yearRange: cleanString(batch?.yearRange),
+        members: toUniqueStrings(batch?.members),
+        governorNames: toUniqueStrings(batch?.governorNames),
+        photos: toUniqueStrings(batch?.photos),
+      };
+    });
+
+  return [...mergedFallbackBatches, ...extraIncomingBatches].sort(
+    (firstBatch, secondBatch) => Number(secondBatch.id) - Number(firstBatch.id)
+  );
+};
+
 export default function CastPage() {
   const { siteContent } = useSiteContent();
-  const castBatches = siteContent?.castBatches?.length ? siteContent.castBatches : CAST_BATCHES;
-  const [activeBatchId, setActiveBatchId] = useState(castBatches[0].id);
+  const castBatches = useMemo(
+    () => mergeCastBatches(siteContent?.castBatches, CAST_BATCHES),
+    [siteContent?.castBatches]
+  );
+  const [activeBatchId, setActiveBatchId] = useState(() => castBatches[0].id);
   const [slideIndex, setSlideIndex] = useState(0);
   const [showBatchGallery, setShowBatchGallery] = useState(false);
+  const safeActiveBatchId = castBatches.some((batch) => batch.id === activeBatchId)
+    ? activeBatchId
+    : castBatches[0].id;
 
   const activeBatch = useMemo(
-    () => castBatches.find((batch) => batch.id === activeBatchId) || castBatches[0],
-    [activeBatchId, castBatches]
+    () => castBatches.find((batch) => batch.id === safeActiveBatchId) || castBatches[0],
+    [safeActiveBatchId, castBatches]
   );
 
   const activePhotos = useMemo(
     () => (activeBatch.photos || []).map((key) => resolveMediaUrl(key)).filter(Boolean),
     [activeBatch]
   );
+  const safeSlideIndex = activePhotos.length > 0 ? slideIndex % activePhotos.length : 0;
 
-  useEffect(() => {
-    if (!castBatches.some((batch) => batch.id === activeBatchId)) {
-      setActiveBatchId(castBatches[0].id);
-    }
-  }, [castBatches, activeBatchId]);
-
-  useEffect(() => {
-    setSlideIndex(0);
-  }, [activeBatchId]);
+  const activeGovernorNames = useMemo(
+    () => toUniqueStrings(activeBatch.governorNames),
+    [activeBatch]
+  );
 
   useEffect(() => {
     if (activePhotos.length <= 1) return;
@@ -75,7 +252,10 @@ export default function CastPage() {
               return (
                 <button
                   key={batch.id}
-                  onClick={() => setActiveBatchId(batch.id)}
+                  onClick={() => {
+                    setActiveBatchId(batch.id);
+                    setSlideIndex(0);
+                  }}
                   className={`px-5 py-2 rounded-full border text-sm md:text-base tracking-wider transition-all duration-300 ${
                     isActive
                       ? "bg-[#FFD700] text-black border-[#FFD700] shadow-[0_0_20px_rgba(255,215,0,0.4)]"
@@ -103,8 +283,8 @@ export default function CastPage() {
                 <div className="relative h-[240px]">
                   {activePhotos.length > 0 ? (
                     <img
-                      key={`${activeBatch.id}-${slideIndex}`}
-                      src={activePhotos[slideIndex]}
+                      key={`${activeBatch.id}-${safeSlideIndex}`}
+                      src={activePhotos[safeSlideIndex]}
                       alt={`${activeBatch.label} slideshow`}
                       className="w-full h-full object-cover animate-[fadein_500ms_ease]"
                     />
@@ -125,18 +305,33 @@ export default function CastPage() {
           <div className="bg-black/55 border border-white/10 rounded-2xl p-6">
             <p className="text-[#FFD700] text-xs uppercase tracking-[0.24em] mb-4">Group Members</p>
             <div className="rounded-2xl border border-[#FFD700]/20 bg-black/35 min-h-[320px] md:min-h-[360px] p-5">
-              <div className="grid sm:grid-cols-2 gap-3">
+              {activeGovernorNames.length > 0 && (
+                <p className="mb-4 text-[11px] uppercase tracking-[0.2em] text-[#f3d47a]">
+                  Gold-highlighted names are the batch leads.
+                </p>
+              )}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {(activeBatch.members || [])
                   .map((member) => String(member || "").trim())
                   .filter(Boolean)
-                  .map((member, memberIndex) => (
-                    <div
-                      key={`${member}-${memberIndex}`}
-                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-gray-200 hover:border-[#FFD700]/50 hover:bg-[#FFD700]/10 transition-all duration-300"
-                    >
-                      {member}
-                    </div>
-                  ))}
+                  .map((member, memberIndex) => {
+                    const isGovernor = activeGovernorNames.some((governorName) => namesMatch(member, governorName));
+                    return (
+                      <div
+                        key={`${member}-${memberIndex}`}
+                        className={`rounded-xl border px-4 py-3 text-gray-200 transition-all duration-300 ${
+                          isGovernor
+                            ? "border-[#FFD700]/55 bg-[#FFD700]/12 text-[#fff2bf] shadow-[0_0_18px_rgba(255,215,0,0.1)]"
+                            : "border-white/10 bg-white/5 hover:border-[#FFD700]/35 hover:bg-[#FFD700]/5"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {isGovernor && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#FFD700] shadow-[0_0_10px_rgba(255,215,0,0.6)]" />}
+                          <span>{member}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           </div>
