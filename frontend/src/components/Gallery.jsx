@@ -4,15 +4,21 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import backgroundVideo from "../Legacy/background.mp4";
 import { LOCAL_GALLERY_IMAGES } from "../data/localGalleryImages";
 import { useSiteContent } from "../context/SiteContentContext";
-import { resolveMediaUrl } from "../utils/media";
+import { optimizeImageUrl, resolveMediaUrl } from "../utils/media";
 
-const SCENE_GALLERY_LIMIT = 12;
+const INITIAL_VISIBLE_GALLERY_IMAGES = 4;
+const GALLERY_BATCH_SIZE = 8;
+const SCENE_GALLERY_LIMIT = 4;
+const SCENE_CARD_COUNT = 24;
+const STAR_COUNT = 4000;
+const MOBILE_BREAKPOINT = 768;
 
 export default function Gallery() {
   const mountRef = useRef(null);
   const [modalSrc, setModalSrc] = useState(null);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [isGalleryReady, setIsGalleryReady] = useState(false);
+  const [visibleGalleryCount, setVisibleGalleryCount] = useState(INITIAL_VISIBLE_GALLERY_IMAGES);
   const { siteContent } = useSiteContent();
   const backToHref = useMemo(() => {
     const fallback = "/?skipCurtain=1&fromGallery=1#galleryCta";
@@ -38,25 +44,59 @@ export default function Gallery() {
     const refs = siteContent?.gallery?.images || [];
     return refs.map((ref) => resolveMediaUrl(ref)).filter(Boolean);
   }, [siteContent]);
-  const allGalleryImages = useMemo(
-    () => (LOCAL_GALLERY_IMAGES.length ? LOCAL_GALLERY_IMAGES : siteGalleryImages),
-    [siteGalleryImages]
-  );
+  const allGalleryImages = useMemo(() => {
+    const baseImages = LOCAL_GALLERY_IMAGES.length ? LOCAL_GALLERY_IMAGES : siteGalleryImages;
+    return baseImages
+      .filter((src) => typeof src === "string" && src.trim())
+      .map((src) => optimizeImageUrl(src))
+      .filter(Boolean);
+  }, [siteGalleryImages]);
   const sceneGalleryImages = useMemo(
     () => allGalleryImages.slice(0, Math.min(allGalleryImages.length, SCENE_GALLERY_LIMIT)),
     [allGalleryImages]
   );
+  const visibleGalleryImages = useMemo(
+    () => allGalleryImages.slice(0, visibleGalleryCount),
+    [allGalleryImages, visibleGalleryCount]
+  );
+  const hasMoreGalleryImages = visibleGalleryCount < allGalleryImages.length;
 
   useEffect(() => {
     document.body.classList.add("gallery-page");
     return () => document.body.classList.remove("gallery-page");
   }, []);
 
+  const loadMoreGalleryImages = () => {
+    setVisibleGalleryCount((current) => Math.min(current + GALLERY_BATCH_SIZE, allGalleryImages.length));
+  };
+
+  const openAllPhotos = () => {
+    setModalSrc(null);
+    setVisibleGalleryCount(Math.min(INITIAL_VISIBLE_GALLERY_IMAGES, allGalleryImages.length));
+    setShowAllPhotos(true);
+  };
+
+  const handleGalleryScroll = (event) => {
+    if (!hasMoreGalleryImages) return;
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 220) {
+      loadMoreGalleryImages();
+    }
+  };
+
   useEffect(() => {
     if (!mountRef.current) return;
+    if (sceneGalleryImages.length === 0) {
+      const readyTimer = window.setTimeout(() => {
+        setIsGalleryReady(true);
+      }, 0);
+      return () => window.clearTimeout(readyTimer);
+    }
+
     const resetReadyTimer = window.setTimeout(() => {
       setIsGalleryReady(false);
     }, 0);
+    const isMobileViewport = window.innerWidth <= MOBILE_BREAKPOINT;
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x000000, 120, 320);
@@ -67,7 +107,7 @@ export default function Gallery() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(isMobileViewport ? 1 : Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMappingExposure = 0.85;
     renderer.domElement.style.position = "fixed";
@@ -77,8 +117,8 @@ export default function Gallery() {
     mountRef.current.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.04;
+    controls.enableDamping = !isMobileViewport;
+    controls.dampingFactor = isMobileViewport ? 0 : 0.04;
     controls.enablePan = false;
 
     const bgVideo = document.createElement("video");
@@ -239,13 +279,13 @@ export default function Gallery() {
       return material;
     };
 
-    const sceneImagePool = sceneGalleryImages.length ? sceneGalleryImages : allGalleryImages;
-    for (let i = 0; i < 76; i += 1) {
-      const cardImage = sceneImagePool.length ? sceneImagePool[i % sceneImagePool.length] : "";
+    const sceneImagePool = sceneGalleryImages;
+    for (let i = 0; i < SCENE_CARD_COUNT; i += 1) {
+      const cardImage = sceneImagePool[i % sceneImagePool.length];
       const backImage =
-        (sceneImagePool.length > 1 &&
-          sceneImagePool[(i + Math.ceil(sceneImagePool.length / 2)) % sceneImagePool.length]) ||
-        cardImage;
+        sceneImagePool.length > 1
+          ? sceneImagePool[(i + Math.ceil(sceneImagePool.length / 2)) % sceneImagePool.length]
+          : cardImage;
       const frontMat = getMaterialForImage(cardImage, i);
       const backMat = getMaterialForImage(backImage, i + 500);
       const cardGroup = new THREE.Group();
@@ -289,7 +329,7 @@ export default function Gallery() {
       return new THREE.CanvasTexture(c);
     };
 
-    const starCount = 22000;
+    const starCount = STAR_COUNT;
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starPos.length; i += 1) {
@@ -360,7 +400,7 @@ export default function Gallery() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setPixelRatio(window.innerWidth <= MOBILE_BREAKPOINT ? 1 : Math.min(window.devicePixelRatio || 1, 1.5));
     };
     window.addEventListener("resize", onResize);
 
@@ -393,7 +433,7 @@ export default function Gallery() {
       bgVideo.pause();
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
     };
-  }, [allGalleryImages, sceneGalleryImages]);
+  }, [sceneGalleryImages.length]);
 
   return (
     <div className="gallery-page-root">
@@ -437,10 +477,7 @@ export default function Gallery() {
       <button
         type="button"
         className="gallery-view-all-btn"
-        onClick={() => {
-          setModalSrc(null);
-          setShowAllPhotos(true);
-        }}
+        onClick={openAllPhotos}
       >
         View all
       </button>
@@ -451,7 +488,7 @@ export default function Gallery() {
           <div id="close-btn" onClick={() => setModalSrc(null)}>
             ✖
           </div>
-          <img id="modal-img" src={modalSrc ?? ""} alt="" />
+          {modalSrc ? <img id="modal-img" src={modalSrc} alt="" loading="lazy" decoding="async" /> : null}
         </div>
       </div>
 
@@ -461,6 +498,7 @@ export default function Gallery() {
       {showAllPhotos && (
         <div
           className="gallery-all-overlay"
+          onScroll={handleGalleryScroll}
           onClick={(event) => {
             if (event.target === event.currentTarget) setShowAllPhotos(false);
           }}
@@ -473,13 +511,18 @@ export default function Gallery() {
                 <p className="gallery-all-subtitle">Cinematic contact sheet of every frame</p>
               </div>
               <div className="gallery-all-actions">
+                {hasMoreGalleryImages && (
+                  <button type="button" onClick={loadMoreGalleryImages}>
+                    Load More
+                  </button>
+                )}
                 <button type="button" onClick={() => setShowAllPhotos(false)}>
                   Close
                 </button>
               </div>
             </div>
             <div className="gallery-all-grid">
-              {allGalleryImages.map((src, index) => (
+              {visibleGalleryImages.map((src, index) => (
                 <button
                   key={`${src}-${index}`}
                   type="button"
@@ -487,7 +530,7 @@ export default function Gallery() {
                   onClick={() => setModalSrc(src)}
                 >
                   <span className="gallery-sprocket top" aria-hidden="true" />
-                  <img src={src} alt={`Gallery ${index + 1}`} loading="lazy" decoding="async" />
+                  {src ? <img src={src} alt={`Gallery ${index + 1}`} loading="lazy" decoding="async" /> : null}
                   <div className="gallery-all-caption">
                     <span className="gallery-all-index">Frame #{index + 1}</span>
                   </div>
