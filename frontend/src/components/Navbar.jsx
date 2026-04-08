@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import logo from "../Legacy/logo.png";
 import WarpGalleryLink from "./WarpGalleryLink";
 
@@ -42,6 +42,31 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const closeMenu = () => setIsMobileMenuOpen(false);
+
+  const handleNavClick = (e, targetId, offset = 0) => {
+    e.preventDefault();
+    if (isMobileMenuOpen) closeMenu();
+
+    if (targetId === "footer") {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      return;
+    }
+
+    const element = document.getElementById(targetId);
+    if (element) {
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition + offset,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  // Lock body scroll while mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileMenuOpen]);
 
   const handleLogoClick = (event) => {
     event.preventDefault();
@@ -108,26 +133,39 @@ export default function Navbar() {
         <a href="#team" className="hover:text-[#FFD700] transition-colors">
           CAST
         </a>
-        <a href="#contact" className="hover:text-[#FFD700] transition-colors">
+        <a href="#contact" onClick={(e) => handleNavClick(e, 'footer')} className="hover:text-[#FFD700] transition-colors">
           CONTACT US
         </a>
       </div>
 
-      {isMobileMenuOpen && (
-        <div className="absolute top-full left-0 w-full h-[calc(100vh-72px)] bg-black/95 backdrop-blur-xl border-t border-[#333] flex flex-col items-center pt-8 space-y-8 text-sm font-['Syncopate'] font-bold tracking-widest text-gray-300 md:hidden overflow-y-auto pb-28">
+      {/* Backdrop — tap outside to close */}
+      <div
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm md:hidden z-30 transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
+        onClick={closeMenu}
+        aria-hidden="true"
+      />
+
+      {/* Mobile menu — always mounted, slides in/out via transform */}
+      <div
+        className={`fixed top-0 left-0 w-full h-svh bg-black/95 backdrop-blur-xl border-t border-[#333] flex flex-col items-center pt-[72px] space-y-8 text-sm font-['Syncopate'] font-bold tracking-widest text-gray-300 md:hidden overflow-y-auto pb-[env(safe-area-inset-bottom,28px)] z-40 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-y-0" : "-translate-y-full"
+          }`}
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <div className="flex flex-col items-center space-y-8 pt-8 w-full px-8">
           <a href="#about" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">THE SCRIPT</a>
           <a href="#latest-event" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">POSTER</a>
           <div onClick={closeMenu}><WarpGalleryLink className="hover:text-[#FFD700] transition-colors">GALLERY</WarpGalleryLink></div>
           <a href="#navarasas" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">NAVARASAS</a>
           <a href="#team" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">CAST</a>
-          <a href="#contact" onClick={closeMenu} className="hover:text-[#FFD700] transition-colors">CONTACT US</a>
+          <a href="#contact" onClick={(e) => handleNavClick(e, 'footer')} className="hover:text-[#FFD700] transition-colors">CONTACT US</a>
           {showBackstage && (
             <a href="/admin" className="px-6 py-3 mt-4 rounded-full border border-[#FFD700]/45 text-[#FFD700] text-xs font-bold tracking-[0.2em] uppercase hover:bg-[#FFD700] hover:text-black transition-all">
               Backstage
             </a>
           )}
         </div>
-      )}
+      </div>
     </nav>
   );
 }
