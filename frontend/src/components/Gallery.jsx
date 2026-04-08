@@ -36,9 +36,13 @@ export default function Gallery() {
     const refs = siteContent?.gallery?.images || [];
     return refs.map((ref) => resolveMediaUrl(ref)).filter(Boolean);
   }, [siteContent]);
-  const imagePool = useMemo(
+  const allGalleryImages = useMemo(
     () => (LOCAL_GALLERY_IMAGES.length ? LOCAL_GALLERY_IMAGES : siteGalleryImages),
     [siteGalleryImages]
+  );
+  const sceneGalleryImages = useMemo(
+    () => allGalleryImages.slice(0, Math.min(allGalleryImages.length, 24)),
+    [allGalleryImages]
   );
 
   useEffect(() => {
@@ -144,48 +148,79 @@ export default function Gallery() {
       texture.anisotropy = maxAnisotropy;
     };
 
-    const fallbackPool = imagePool;
-    const fallbackTextures = fallbackPool.map((src) => {
-      const tex = textureLoader.load(src, applyTextureOptions);
-      applyTextureOptions(tex);
-      return tex;
-    });
-
-    if (!fallbackTextures.length) {
+    const createPlaceholderTexture = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 240;
-      canvas.height = 320;
+      canvas.width = 64;
+      canvas.height = 86;
       const context = canvas.getContext("2d");
       if (context) {
         const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
-        gradient.addColorStop(0, "#3d2600");
-        gradient.addColorStop(1, "#100a02");
+        gradient.addColorStop(0, "#2b1f08");
+        gradient.addColorStop(1, "#090808");
         context.fillStyle = gradient;
         context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "rgba(255, 215, 0, 0.28)";
+        context.fillRect(0, 0, canvas.width, 4);
+        context.fillRect(0, canvas.height - 4, canvas.width, 4);
         context.fillStyle = "#f0d27a";
-        context.font = "700 30px Cinzel, serif";
+        context.font = "700 10px Cinzel, serif";
         context.textAlign = "center";
         context.textBaseline = "middle";
-        context.fillText("PRAS THANAM", canvas.width / 2, canvas.height / 2);
+        context.fillText("Loading", canvas.width / 2, canvas.height / 2 - 6);
+        context.font = "500 7px Cinzel, serif";
+        context.fillText("gallery", canvas.width / 2, canvas.height / 2 + 8);
       }
-      const generatedFallback = new THREE.CanvasTexture(canvas);
-      applyTextureOptions(generatedFallback);
-      fallbackTextures.push(generatedFallback);
-    }
+      const generatedPlaceholder = new THREE.CanvasTexture(canvas);
+      applyTextureOptions(generatedPlaceholder);
+      return generatedPlaceholder;
+    };
 
-    const allTextures = [...fallbackTextures];
+    const placeholderTexture = createPlaceholderTexture();
+    const allTextures = [placeholderTexture];
     const materials = [];
     const materialCache = new Map();
+    const textureCache = new Map();
+    let isEffectActive = true;
+    const autoRevealTimer = window.setTimeout(() => {
+      setIsGalleryReady(true);
+    }, 400);
+
+    const loadTexture = (src) => {
+      const normalizedSrc = String(src || "").trim();
+      if (!normalizedSrc) return Promise.resolve(null);
+      if (textureCache.has(normalizedSrc)) return textureCache.get(normalizedSrc);
+
+      const texturePromise = new Promise((resolve) => {
+        const loadedTexture = textureLoader.load(
+          normalizedSrc,
+          (readyTexture) => {
+            if (!isEffectActive) {
+              readyTexture.dispose();
+              resolve(null);
+              return;
+            }
+            applyTextureOptions(readyTexture);
+            allTextures.push(readyTexture);
+            resolve(readyTexture);
+          },
+          undefined,
+          () => resolve(null)
+        );
+        applyTextureOptions(loadedTexture);
+      });
+
+      textureCache.set(normalizedSrc, texturePromise);
+      return texturePromise;
+    };
 
     const getMaterialForImage = (src, index) => {
       const normalizedSrc = String(src || "").trim();
-      const cacheKey = normalizedSrc || `fallback-${index % fallbackTextures.length}`;
+      const cacheKey = normalizedSrc || `fallback-${index}`;
       if (materialCache.has(cacheKey)) return materialCache.get(cacheKey);
 
-      const fallbackTexture = fallbackTextures[index % fallbackTextures.length];
       const material = new THREE.MeshBasicMaterial({
-        map: fallbackTexture || null,
-        color: fallbackTexture ? 0xffffff : 0x1a1a1a,
+        map: placeholderTexture,
+        color: normalizedSrc ? 0xffffff : 0x1a1a1a,
         side: THREE.DoubleSide,
       });
       materials.push(material);
@@ -193,30 +228,21 @@ export default function Gallery() {
 
       if (!normalizedSrc) return material;
 
-      const loadedTexture = textureLoader.load(
-        normalizedSrc,
-        (readyTexture) => {
-          applyTextureOptions(readyTexture);
-          material.map = readyTexture;
-          material.color.setHex(0xffffff);
-          material.needsUpdate = true;
-        },
-        undefined,
-        () => {
-          material.map = fallbackTexture || null;
-          material.color.setHex(fallbackTexture ? 0xffffff : 0x1a1a1a);
-          material.needsUpdate = true;
-        }
-      );
-      applyTextureOptions(loadedTexture);
-      allTextures.push(loadedTexture);
+      loadTexture(normalizedSrc).then((readyTexture) => {
+        if (!isEffectActive || !readyTexture) return;
+        material.map = readyTexture;
+        material.color.setHex(0xffffff);
+        material.needsUpdate = true;
+      });
       return material;
     };
 
+    const sceneImagePool = sceneGalleryImages.length ? sceneGalleryImages : allGalleryImages;
     for (let i = 0; i < 76; i += 1) {
-      const cardImage = imagePool[i % imagePool.length] || fallbackPool[i % fallbackPool.length] || "";
+      const cardImage = sceneImagePool.length ? sceneImagePool[i % sceneImagePool.length] : "";
       const backImage =
-        (imagePool.length > 1 && imagePool[(i + Math.ceil(imagePool.length / 2)) % imagePool.length]) ||
+        (sceneImagePool.length > 1 &&
+          sceneImagePool[(i + Math.ceil(sceneImagePool.length / 2)) % sceneImagePool.length]) ||
         cardImage;
       const frontMat = getMaterialForImage(cardImage, i);
       const backMat = getMaterialForImage(backImage, i + 500);
@@ -322,6 +348,7 @@ export default function Gallery() {
       renderer.render(scene, camera);
       if (!hasFirstFrame) {
         hasFirstFrame = true;
+        window.clearTimeout(autoRevealTimer);
         setIsGalleryReady(true);
       }
     };
@@ -336,7 +363,9 @@ export default function Gallery() {
     window.addEventListener("resize", onResize);
 
     return () => {
+      isEffectActive = false;
       window.clearTimeout(resetReadyTimer);
+      window.clearTimeout(autoRevealTimer);
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("click", onClick);
@@ -352,6 +381,7 @@ export default function Gallery() {
       starGeo.dispose();
       starMat.dispose();
       videoTexture.dispose();
+      placeholderTexture.dispose();
       renderer.dispose();
       bgVideo.removeEventListener("canplay", onVideoReady);
       bgVideo.removeEventListener("loadeddata", onVideoReady);
@@ -361,7 +391,7 @@ export default function Gallery() {
       bgVideo.pause();
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
     };
-  }, [imagePool]);
+  }, [allGalleryImages, sceneGalleryImages]);
 
   return (
     <div className="gallery-page-root">
@@ -447,7 +477,7 @@ export default function Gallery() {
               </div>
             </div>
             <div className="gallery-all-grid">
-              {imagePool.map((src, index) => (
+              {allGalleryImages.map((src, index) => (
                 <button
                   key={`${src}-${index}`}
                   type="button"
