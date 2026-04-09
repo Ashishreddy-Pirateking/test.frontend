@@ -2,15 +2,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import backgroundVideo from "../Legacy/background.mp4";
-import { LOCAL_GALLERY_IMAGES } from "../data/localGalleryImages";
+import {
+  LOCAL_GALLERY_ARCHIVE_IMAGES,
+  LOCAL_GALLERY_SCENE_IMAGES,
+} from "../data/localGalleryImages";
 import { useSiteContent } from "../context/SiteContentContext";
 import { optimizeImageUrl, resolveMediaUrl } from "../utils/media";
 
-const INITIAL_VISIBLE_GALLERY_IMAGES = 4;
-const GALLERY_BATCH_SIZE = 8;
-const SCENE_GALLERY_LIMIT = 4;
-const SCENE_CARD_COUNT = 24;
-const STAR_COUNT = 4000;
+const INITIAL_VISIBLE_GALLERY_IMAGES = 12;
+const GALLERY_BATCH_SIZE = 12;
+const SCENE_GALLERY_LIMIT = 18;
+const SCENE_CARD_COUNT = 18;
+const STAR_COUNT = 3000;
 const MOBILE_BREAKPOINT = 768;
 
 export default function Gallery() {
@@ -44,22 +47,32 @@ export default function Gallery() {
     const refs = siteContent?.gallery?.images || [];
     return refs.map((ref) => resolveMediaUrl(ref)).filter(Boolean);
   }, [siteContent]);
-  const allGalleryImages = useMemo(() => {
-    const baseImages = LOCAL_GALLERY_IMAGES.length ? LOCAL_GALLERY_IMAGES : siteGalleryImages;
+
+  const archiveGalleryImages = useMemo(() => {
+    const baseImages = LOCAL_GALLERY_ARCHIVE_IMAGES.length ? LOCAL_GALLERY_ARCHIVE_IMAGES : siteGalleryImages;
     return baseImages
       .filter((src) => typeof src === "string" && src.trim())
-      .map((src) => optimizeImageUrl(src))
+      .map((src) => src) // skip optimization temporarily
       .filter(Boolean);
   }, [siteGalleryImages]);
-  const sceneGalleryImages = useMemo(
-    () => allGalleryImages.slice(0, Math.min(allGalleryImages.length, SCENE_GALLERY_LIMIT)),
-    [allGalleryImages]
-  );
+
+  const sceneGalleryImages = useMemo(() => {
+    const baseImages = LOCAL_GALLERY_SCENE_IMAGES.length
+      ? LOCAL_GALLERY_SCENE_IMAGES
+      : archiveGalleryImages;
+
+    return baseImages
+      .filter((src) => typeof src === "string" && src.trim())
+      .slice(0, Math.min(baseImages.length, SCENE_GALLERY_LIMIT))
+      .map((src) => src) // skip optimization temporarily
+      .filter(Boolean);
+  }, [archiveGalleryImages]);
+
   const visibleGalleryImages = useMemo(
-    () => allGalleryImages.slice(0, visibleGalleryCount),
-    [allGalleryImages, visibleGalleryCount]
+    () => archiveGalleryImages.slice(0, visibleGalleryCount),
+    [archiveGalleryImages, visibleGalleryCount]
   );
-  const hasMoreGalleryImages = visibleGalleryCount < allGalleryImages.length;
+  const hasMoreGalleryImages = visibleGalleryCount < archiveGalleryImages.length;
 
   useEffect(() => {
     document.body.classList.add("gallery-page");
@@ -67,12 +80,12 @@ export default function Gallery() {
   }, []);
 
   const loadMoreGalleryImages = () => {
-    setVisibleGalleryCount((current) => Math.min(current + GALLERY_BATCH_SIZE, allGalleryImages.length));
+    setVisibleGalleryCount((current) => Math.min(current + GALLERY_BATCH_SIZE, archiveGalleryImages.length));
   };
 
   const openAllPhotos = () => {
     setModalSrc(null);
-    setVisibleGalleryCount(Math.min(INITIAL_VISIBLE_GALLERY_IMAGES, allGalleryImages.length));
+    setVisibleGalleryCount(Math.min(INITIAL_VISIBLE_GALLERY_IMAGES, archiveGalleryImages.length));
     setShowAllPhotos(true);
   };
 
@@ -85,6 +98,13 @@ export default function Gallery() {
   };
 
   useEffect(() => {
+  const hardFallback = window.setTimeout(() => {
+    setIsGalleryReady(true);
+  }, 3000);
+  return () => window.clearTimeout(hardFallback);
+}, []);
+
+  useEffect(() => {
     if (!mountRef.current) return;
     if (sceneGalleryImages.length === 0) {
       const readyTimer = window.setTimeout(() => {
@@ -95,7 +115,7 @@ export default function Gallery() {
 
     const resetReadyTimer = window.setTimeout(() => {
       setIsGalleryReady(false);
-    }, 0);
+    }, 50);
     const isMobileViewport = window.innerWidth <= MOBILE_BREAKPOINT;
 
     const scene = new THREE.Scene();
@@ -105,9 +125,12 @@ export default function Gallery() {
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 0, 90);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isMobileViewport,
+      powerPreference: "high-performance",
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(isMobileViewport ? 1 : Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(isMobileViewport ? 1 : Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMappingExposure = 0.85;
     renderer.domElement.style.position = "fixed";
@@ -123,7 +146,7 @@ export default function Gallery() {
 
     const bgVideo = document.createElement("video");
     bgVideo.src = backgroundVideo;
-    bgVideo.preload = "auto";
+    bgVideo.preload = "metadata";
     bgVideo.loop = true;
     bgVideo.muted = true;
     bgVideo.playsInline = true;
@@ -224,8 +247,8 @@ export default function Gallery() {
     const textureCache = new Map();
     let isEffectActive = true;
     const autoRevealTimer = window.setTimeout(() => {
-      setIsGalleryReady(true);
-    }, 400);
+  setIsGalleryReady(true);
+}, 800);
 
     const loadTexture = (src) => {
       const normalizedSrc = String(src || "").trim();
@@ -280,7 +303,9 @@ export default function Gallery() {
     };
 
     const sceneImagePool = sceneGalleryImages;
-    for (let i = 0; i < SCENE_CARD_COUNT; i += 1) {
+    const sceneCardCount = Math.min(SCENE_CARD_COUNT, sceneImagePool.length);
+
+    for (let i = 0; i < sceneCardCount; i += 1) {
       const cardImage = sceneImagePool[i % sceneImagePool.length];
       const backImage =
         sceneImagePool.length > 1
@@ -400,7 +425,7 @@ export default function Gallery() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(window.innerWidth <= MOBILE_BREAKPOINT ? 1 : Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setPixelRatio(window.innerWidth <= MOBILE_BREAKPOINT ? 1 : Math.min(window.devicePixelRatio || 1, 1.25));
     };
     window.addEventListener("resize", onResize);
 
