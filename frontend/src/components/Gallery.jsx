@@ -7,7 +7,7 @@ import {
   LOCAL_GALLERY_SCENE_IMAGES,
 } from "../data/localGalleryImages";
 import { useSiteContent } from "../context/SiteContentContext";
-import { optimizeImageUrl, resolveMediaUrl } from "../utils/media";
+import { resolveMediaUrl } from "../utils/media";
 
 const INITIAL_VISIBLE_GALLERY_IMAGES = 12;
 const GALLERY_BATCH_SIZE = 12;
