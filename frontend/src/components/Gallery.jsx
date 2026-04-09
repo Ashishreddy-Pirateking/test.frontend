@@ -11,8 +11,6 @@ import { resolveMediaUrl } from "../utils/media";
 
 const INITIAL_VISIBLE_GALLERY_IMAGES = 12;
 const GALLERY_BATCH_SIZE = 12;
-const SCENE_GALLERY_LIMIT = 18;
-const SCENE_CARD_COUNT = 18;
 const STAR_COUNT = 3000;
 const MOBILE_BREAKPOINT = 768;
 
@@ -63,7 +61,6 @@ export default function Gallery() {
 
     return baseImages
       .filter((src) => typeof src === "string" && src.trim())
-      .slice(0, Math.min(baseImages.length, SCENE_GALLERY_LIMIT))
       .map((src) => src) // skip optimization temporarily
       .filter(Boolean);
   }, [archiveGalleryImages]);
@@ -303,7 +300,7 @@ export default function Gallery() {
     };
 
     const sceneImagePool = sceneGalleryImages;
-    const sceneCardCount = Math.min(SCENE_CARD_COUNT, sceneImagePool.length);
+    const sceneCardCount = sceneImagePool.length;
 
     for (let i = 0; i < sceneCardCount; i += 1) {
       const cardImage = sceneImagePool[i % sceneImagePool.length];
