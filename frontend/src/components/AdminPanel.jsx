@@ -226,17 +226,30 @@ export default function AdminPanel() {
     setError("");
     setMessage("");
     try {
+      const galleryImages = Array.isArray(content.gallery?.images)
+        ? content.gallery.images
+        : [];
+      const castBatches = Array.isArray(content.castBatches)
+        ? content.castBatches
+        : [];
+      const timeline = Array.isArray(content.timeline) ? content.timeline : [];
+      const navarasas = Array.isArray(content.navarasas) ? content.navarasas : [];
+      const latestEvent = content.latestEvent || createDefaultSiteContent().latestEvent;
       const payload = {
         gallery: {
-          images: content.gallery?.images || [],
+          images: Array.isArray(galleryImages) ? galleryImages : [],
         },
-        timeline: content.timeline || [],
-        navarasas: content.navarasas || [],
-        castBatches: content.castBatches || [],
+        castBatches: castBatches.map((batch) => ({
+          ...batch,
+          photos: Array.isArray(batch.photos) ? batch.photos : [],
+        })),
+        timeline,
+        navarasas,
         governors: content.governors || [],
-        latestEvent: content.latestEvent || createDefaultSiteContent().latestEvent,
+        latestEvent,
       };
 
+      console.log("Sending payload:", payload);
       await updateAdminSiteContent(token, payload);
       writeCachedSiteContent(mergeSiteContent(payload));
 
