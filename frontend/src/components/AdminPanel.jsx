@@ -704,17 +704,39 @@ export default function AdminPanel() {
               <span className="block">Cast</span>
               <span className="block">Mana vaale</span>
             </h2>
-            <select
-              value={selectedCastYear}
-              onChange={(event) => setSelectedCastYear(event.target.value)}
-              className="px-4 py-2 rounded-md bg-black/60 border border-[#FFD700]/35 text-[#FFD700] text-sm focus:border-[#FFD700] outline-none"
-            >
-              {castYearOptions.map((year) => (
-                <option key={year} value={year}>
-                  Batch of {year}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedCastYear}
+                onChange={(event) => setSelectedCastYear(event.target.value)}
+                className="px-4 py-2 rounded-md bg-black/60 border border-[#FFD700]/35 text-[#FFD700] text-sm focus:border-[#FFD700] outline-none"
+              >
+                {castYearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    Batch of {year}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const year = String(window.prompt("Enter batch year (e.g. 2026):") || "").trim();
+                  if (!/^\d{4}$/.test(year)) return;
+                  setContent((prev) => {
+                    const next = deepClone(prev);
+                    next.castBatches = Array.isArray(next.castBatches) ? next.castBatches : [];
+                    const exists = next.castBatches.some((batch) => String(batch.id) === year);
+                    if (!exists) {
+                      next.castBatches.push(createCastBatchFromYear(year));
+                    }
+                    return next;
+                  });
+                  setSelectedCastYear(year);
+                }}
+                className="px-4 py-2 rounded-md border border-[#FFD700]/35 text-[#FFD700] text-sm hover:bg-[#FFD700] hover:text-black transition-all"
+              >
+                Add New Batch
+              </button>
+            </div>
           </div>
           <p className="text-xs text-gray-400 uppercase tracking-[0.14em] mb-3">
             Batch year = joining year. Default range auto-follows as {selectedCastYear} - {Number(selectedCastYear) + 4}.
