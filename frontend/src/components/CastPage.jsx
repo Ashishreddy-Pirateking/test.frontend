@@ -156,7 +156,9 @@ const mergeCastBatches = (incomingBatches, fallbackBatches) => {
       governorNames: incomingGovernorNames.length
         ? incomingGovernorNames
         : toUniqueStrings(fallbackBatch.governorNames),
-      photos: useIncomingBatch ? toUniqueStrings(incomingBatch?.photos) : toUniqueStrings(fallbackBatch.photos),
+      photos: toUniqueStrings(incomingBatch?.photos).length
+        ? toUniqueStrings(incomingBatch?.photos)
+        : toUniqueStrings(fallbackBatch.photos),
     };
   });
 
