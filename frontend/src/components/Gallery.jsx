@@ -47,17 +47,21 @@ export default function Gallery() {
   }, [siteContent]);
 
   const archiveGalleryImages = useMemo(() => {
-    const baseImages = LOCAL_GALLERY_ARCHIVE_IMAGES.length ? LOCAL_GALLERY_ARCHIVE_IMAGES : siteGalleryImages;
-    return baseImages
-      .filter((src) => typeof src === "string" && src.trim())
-      .map((src) => src) // skip optimization temporarily
-      .filter(Boolean);
+    const combined = [...siteGalleryImages, ...LOCAL_GALLERY_ARCHIVE_IMAGES];
+    const seen = new Set();
+    return combined.filter((src) => {
+      if (typeof src !== "string" || !src.trim()) return false;
+      const key = src.split("/").pop().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [siteGalleryImages]);
 
   const sceneGalleryImages = useMemo(() => {
-    const baseImages = LOCAL_GALLERY_SCENE_IMAGES.length
-      ? LOCAL_GALLERY_SCENE_IMAGES
-      : archiveGalleryImages;
+    const baseImages = archiveGalleryImages.length
+      ? archiveGalleryImages
+      : LOCAL_GALLERY_SCENE_IMAGES;
 
     return baseImages
       .filter((src) => typeof src === "string" && src.trim())
