@@ -6,6 +6,10 @@ const CREDIT_LINKS = [
     href: "https://www.instagram.com/ashishreddy_02?igsh=Y2Q3Z2V6NDgzZjNw",
   },
   {
+    name: "Jessy",
+    href: "https://www.instagram.com/jessy_07_03?igsh=MTNjdGlvNzk5NmJxbg==",
+  },
+  {
     name: "Sameera",
     href: "https://www.instagram.com/sameerajenna_25?igsh=YXBnZnMybWhpMzd3",
   },
@@ -63,7 +67,7 @@ export default function Footer() {
             className="text-[#87ceeb] text-base md:text-xl font-semibold tracking-wide"
             style={{ fontFamily: "'Akaya Telivigala', system-ui" }}
           >
-            6. YO Prasthanam
+            ఆరు. Yo Prasthanam
           </span>
         </p>
 
@@ -74,7 +78,7 @@ export default function Footer() {
               : "pointer-events-none opacity-0 -translate-y-1"
             }`}
         >
-          <span className="text-gray-600/90">Creators of the page</span>
+          <span className="text-gray-600/90">Developers of page</span>
           {CREDIT_LINKS.map((item) => (
             <a
               key={item.name}
@@ -89,7 +93,7 @@ export default function Footer() {
           ))}
         </div>
 
-        <p className="text-[14px] text-gray-600 opacity-90 font-mono">
+        <p className="text-[16px] text-gray-600 opacity-100 font-mono">
           {/*
             © button: meets the 44 × 44 px Apple HIG tap-target requirement
             so users can reliably hit it on mobile to reveal credits.
