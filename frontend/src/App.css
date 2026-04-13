@@ -60,6 +60,7 @@
 }
 
 /* Footer — lift up past the home indicator bar */
+/* pani leka chesthunna pani
 .footer {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
