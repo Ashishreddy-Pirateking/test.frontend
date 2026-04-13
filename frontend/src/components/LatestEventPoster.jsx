@@ -2,14 +2,27 @@ import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
 
 export default function LatestEventPoster() {
-  const { siteContent } = useSiteContent();
-  console.log(siteContent);
+  const { siteContent, loading } = useSiteContent();
+
+  if (!siteContent && loading) {
+    return (
+      <section id="latest-event" className="latest-event-section">
+        <div className="latest-event-shell">
+          <div className="latest-event-details-card">
+            <p className="latest-event-overline">Now On Stage</p>
+            <h2 className="latest-event-title">Loading latest production...</h2>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const latestEvent = siteContent?.latestEvent || {};
-  const title = String(latestEvent.title || "Latest Production");
-  const posterSrc = resolveMediaUrl(latestEvent.poster || "logo");
-  const date = String(latestEvent.date || "TBA");
-  const time = String(latestEvent.time || "TBA");
-  const venue = String(latestEvent.venue || "Venue TBA");
+  const title = String(latestEvent.title || "");
+  const posterSrc = resolveMediaUrl(latestEvent.poster || "");
+  const date = String(latestEvent.date || "");
+  const time = String(latestEvent.time || "");
+  const venue = String(latestEvent.venue || "");
   const description = String(latestEvent.description || "");
 
   return (

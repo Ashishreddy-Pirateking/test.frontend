@@ -4,13 +4,12 @@ import { createDefaultSiteContent } from "../data/defaultSiteContent";
 import { fetchPublicSiteContent } from "../services/service";
 import {
   mergeSiteContent,
-  readCachedSiteContent,
   writeCachedSiteContent,
 } from "../utils/siteContent";
 
 const SiteContentContext = createContext({
-  siteContent: createDefaultSiteContent(),
-  loading: false,
+  siteContent: null,
+  loading: true,
   error: "",
   refresh: async () => {},
 });
@@ -18,8 +17,9 @@ const SiteContentContext = createContext({
 const AUTO_REFRESH_MS = 15000;
 
 export function SiteContentProvider({ children }) {
-  const [siteContent, setSiteContent] = useState(readCachedSiteContent);
-  const [loading, setLoading] = useState(false);
+  // Start null so components know backend hasn't responded yet
+  const [siteContent, setSiteContent] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchPublicContent = useCallback(async ({ silent = false } = {}) => {
@@ -32,7 +32,8 @@ export function SiteContentProvider({ children }) {
       writeCachedSiteContent(mergedContent);
     } catch (err) {
       setError(err?.message || "Failed to load content.");
-      setSiteContent((prev) => prev || readCachedSiteContent());
+      // On failure, fall back to defaults so site isn't blank
+      setSiteContent((prev) => prev || createDefaultSiteContent());
     } finally {
       if (!silent) setLoading(false);
     }

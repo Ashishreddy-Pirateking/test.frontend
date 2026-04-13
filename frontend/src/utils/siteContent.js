@@ -23,7 +23,20 @@ export const mergeSiteContent = (incoming) => {
         : fallback.timeline,
     navarasas:
       Array.isArray(incoming.navarasas) && incoming.navarasas.length
-        ? incoming.navarasas
+        ? incoming.navarasas.map((incomingRasa) => {
+            const fallbackRasa = fallback.navarasas.find((r) => r.id === incomingRasa.id);
+            return {
+              ...(fallbackRasa || {}),
+              ...incomingRasa,
+              // Use backend plays if non-empty, else fallback plays for that rasa
+              plays:
+                Array.isArray(incomingRasa.plays) && incomingRasa.plays.length
+                  ? incomingRasa.plays
+                  : Array.isArray(fallbackRasa?.plays)
+                  ? fallbackRasa.plays
+                  : [],
+            };
+          })
         : fallback.navarasas,
     castBatches:
       Array.isArray(incoming.castBatches) && incoming.castBatches.length
@@ -33,10 +46,11 @@ export const mergeSiteContent = (incoming) => {
       Array.isArray(incoming.governors) && incoming.governors.length
         ? incoming.governors
         : fallback.governors,
-    latestEvent: {
-      ...fallback.latestEvent,
-      ...(incoming.latestEvent || {}),
-    },
+    // Always prefer backend latestEvent, only fall back if completely missing
+    latestEvent:
+      incoming.latestEvent && Object.keys(incoming.latestEvent).length
+        ? { ...incoming.latestEvent }
+        : fallback.latestEvent,
   };
 };
 
@@ -56,13 +70,13 @@ export const normalizeSiteContentDocument = (incoming) => {
 };
 
 export const readCachedSiteContent = () => {
-  if (typeof window === "undefined") return createDefaultSiteContent();
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(SITE_CONTENT_CACHE_KEY);
-    if (!raw) return createDefaultSiteContent();
+    if (!raw) return null;
     return mergeSiteContent(JSON.parse(raw));
   } catch {
-    return createDefaultSiteContent();
+    return null;
   }
 };
 
@@ -74,6 +88,6 @@ export const writeCachedSiteContent = (content) => {
       JSON.stringify(mergeSiteContent(content))
     );
   } catch {
-    // Ignore storage failures and keep runtime state alive.
+    // Ignore storage failures
   }
 };

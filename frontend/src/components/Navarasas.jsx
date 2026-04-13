@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { NAVARASAS } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
 import Challenge from "./Challenge";
@@ -28,41 +28,36 @@ const TELUGU_RASA_FONTS = {
 };
 
 export default function Navarasas() {
-  const { siteContent } = useSiteContent();
+  const { siteContent, loading } = useSiteContent();
 
   const rasaList = useMemo(() => {
-    const live =
-      Array.isArray(siteContent?.navarasas) && siteContent.navarasas.length
-        ? siteContent.navarasas
-        : NAVARASAS;
+    const live = Array.isArray(siteContent?.navarasas) ? siteContent.navarasas : [];
     const fallbackById = Object.fromEntries(NAVARASAS.map((rasa) => [rasa.id, rasa]));
 
     return live.map((item) => ({
       ...(fallbackById[item.id] || {}),
       ...item,
-      plays: Array.isArray(fallbackById[item.id]?.plays)
-        ? fallbackById[item.id].plays
-        : Array.isArray(item.plays)
+      plays:
+        Array.isArray(item.plays) && item.plays.length
           ? item.plays
-          : [],
+          : Array.isArray(fallbackById[item.id]?.plays)
+            ? fallbackById[item.id].plays
+            : [],
     }));
   }, [siteContent]);
 
   const [activeRasaId, setActiveRasaId] = useState(() => String(rasaList[0]?.id || NAVARASAS[0]?.id || ""));
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    if (!rasaList.some((rasa) => String(rasa.id) === String(activeRasaId))) {
-      setActiveRasaId(String(rasaList[0]?.id || NAVARASAS[0]?.id || ""));
-    }
-  }, [rasaList, activeRasaId]);
+  const safeActiveRasaId = rasaList.some((rasa) => String(rasa.id) === String(activeRasaId))
+    ? activeRasaId
+    : String(rasaList[0]?.id || NAVARASAS[0]?.id || "");
 
   const currentRasa = useMemo(
     () =>
-      rasaList.find((rasa) => String(rasa.id) === String(activeRasaId)) ||
+      rasaList.find((rasa) => String(rasa.id) === String(safeActiveRasaId)) ||
       rasaList[0] ||
       NAVARASAS[0],
-    [rasaList, activeRasaId]
+    [rasaList, safeActiveRasaId]
   );
 
   const glowStyle = useMemo(
@@ -71,6 +66,33 @@ export default function Navarasas() {
     }),
     [currentRasa]
   );
+
+  if (!siteContent && loading) {
+    return (
+      <section
+        id="navarasas"
+        className="navarasas-fit pt-10 pb-20 border-t border-b border-[#222] transition-[background] duration-700 ease-in-out"
+        style={{ background: "radial-gradient(circle at center, #FFD70020 0%, #000000 80%)" }}
+      >
+        <div className="max-w-6xl mx-auto px-6 relative z-10 text-center">
+          <div className="text-center mb-12 flex flex-col items-center">
+            <div className="group relative min-h-[60px] md:h-[80px] flex flex-col items-center justify-center cursor-none">
+              <h2 className="text-[32px] md:text-5xl font-['DynaPuff'] font-normal text-[#FFD700] tracking-[0.25em] md:tracking-[0.35em] uppercase drop-shadow-[0_0_18px_rgba(255,215,0,0.65)]">
+                Navarasa
+              </h2>
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-4">
+              <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
+              <p className="text-base md:text-lg font-playfair text-gray-300 tracking-[0.28em] uppercase opacity-80">
+                Loading emotions...
+              </p>
+              <span className="h-px w-12 md:w-16 bg-gray-400/60"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

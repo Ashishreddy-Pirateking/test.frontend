@@ -29,11 +29,11 @@ export const createDefaultSiteContent = () => ({
   castBatches: cloneCastBatches(),
   governors: cloneGovernors(),
   latestEvent: {
-    title: "Prasthanam 2026",
-    poster: "logo",
-    date: "March 20, 2026",
-    time: "7:00 PM",
-    venue: "Kalidas Auditorium, IIT Kharagpur",
-    description: "Book your seats early and witness Prasthanam's latest stage production live.",
-  },
+  title: "Evaru Ee Sundari. Annual Production 2026",
+  poster: "logo",
+  date: "07 April, 2026",
+  time: "6:00 PM",
+  venue: "Kalidas Auditorium, IIT Kharagpur",
+  description: "Witness Prasthanam's latest stage production live.",
+},
 });

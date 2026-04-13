@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TIMELINE } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
 
 const DESKTOP_PIN_BREAKPOINT = 1024;
@@ -20,8 +19,11 @@ export default function Timeline() {
     sectionHeight: 0,
   });
   const [pinnedTranslate, setPinnedTranslate] = useState(0);
-  const { siteContent } = useSiteContent();
-  const timelineItems = siteContent?.timeline?.length ? siteContent.timeline : TIMELINE;
+  const { siteContent, loading } = useSiteContent();
+  const timelineItems = useMemo(
+    () => (Array.isArray(siteContent?.timeline) ? siteContent.timeline : []),
+    [siteContent]
+  );
 
   const frames = useMemo(() => {
     return timelineItems.map((item, i) => {
@@ -156,10 +158,7 @@ export default function Timeline() {
   };
 
   useEffect(() => {
-    if (!pinMetrics.enabled) {
-      setPinnedTranslate(0);
-      return;
-    }
+    if (!pinMetrics.enabled) return;
 
     let rafId = 0;
     const updatePinnedTranslate = () => {
@@ -234,6 +233,24 @@ export default function Timeline() {
   const trackStyle = pinMetrics.enabled
     ? { transform: `translate3d(${-pinnedTranslate}px, 0, 0)` }
     : undefined;
+
+  if (!siteContent && loading) {
+    return (
+      <section
+        id="about"
+        className="timeline-scroll-section pt-10 pb-16 px-6 max-w-6xl mx-auto"
+      >
+        <div className="text-center group relative min-h-[50px] md:h-[60px] flex flex-col items-center justify-center cursor-none mb-12">
+          <h2 className="text-3xl md:text-5xl text-center text-[#FFD700]" style={{ fontFamily: "'Limelight', cursive" }}>
+            Script (About Us)
+          </h2>
+          <p className="mt-6 text-gray-300 tracking-[0.16em] uppercase">
+            Loading timeline...
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

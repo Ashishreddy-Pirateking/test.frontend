@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { GOVERNORS } from "../data/legacyData";
 import { useSiteContent } from "../context/SiteContentContext";
 import { resolveMediaUrl } from "../utils/media";
 
@@ -29,13 +28,24 @@ const resolveZodiacSymbol = (value) => {
 };
 
 export default function Team() {
-  const { siteContent } = useSiteContent();
-  const governors = siteContent?.governors?.length ? siteContent.governors : GOVERNORS;
+  const { siteContent, loading } = useSiteContent();
+  const governors = Array.isArray(siteContent?.governors) ? siteContent.governors : [];
   const [flippedCardIndex, setFlippedCardIndex] = useState(null);
 
   const toggleFlip = (index) => {
     setFlippedCardIndex(prev => prev === index ? null : index);
   };
+
+  if (!siteContent && loading) {
+    return (
+      <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
+        <h2 className="text-6xl md:text-7xl text-center mb-6 text-[#FFD700] tracking-wide" style={{ fontFamily: "'Great Lakes NF', sans-serif" }}>The Governors</h2>
+        <p className="text-center text-lg text-gray-400 mb-16">
+          Loading governors...
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section id="team" className="py-24 px-6 max-w-7xl mx-auto">
@@ -45,16 +55,8 @@ export default function Team() {
       </p>
       <div id="teamGrid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {governors.map((g, index) => {
-          const normalizedGovernorName = String(g.name || "").replace(/\s+/g, "").toLowerCase();
-          const fallbackGovernor =
-            GOVERNORS.find(
-              (item) => String(item.name || "").replace(/\s+/g, "").toLowerCase() === normalizedGovernorName
-            ) || GOVERNORS[index];
-          const funFact =
-            normalizedGovernorName === "manishrasamalla"
-              ? "Farms Aura as part-time"
-              : (g.funFact || fallbackGovernor?.funFact || "-");
-          const imageSrc = resolveMediaUrl(g.img || fallbackGovernor?.img || "logo");
+          const funFact = g.funFact || "-";
+          const imageSrc = resolveMediaUrl(g.img || "");
           const zodiacSymbol = resolveZodiacSymbol(g.zodiacSign);
           const showZodiac = Boolean(zodiacSymbol);
           const department = String(g.department || "").trim();
@@ -78,12 +80,6 @@ export default function Team() {
                       src={imageSrc}
                       alt={g.name}
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      onError={(event) => {
-                        const fallbackSrc = resolveMediaUrl(fallbackGovernor?.img || "logo");
-                        if (event.currentTarget.src !== fallbackSrc) {
-                          event.currentTarget.src = fallbackSrc;
-                        }
-                      }}
                     />
                   </div>
                   <div className="h-1/4 p-4 flex flex-col justify-center items-center bg-[#1a1a1a]">
